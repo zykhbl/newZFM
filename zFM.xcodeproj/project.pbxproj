@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		20E17BC61C92652F0031ADCA /* audio_data_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BAD1C92652F0031ADCA /* audio_data_buf.c */; };
+		20E17BC71C92652F0031ADCA /* bit_stream.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BAF1C92652F0031ADCA /* bit_stream.c */; };
+		20E17BC81C92652F0031ADCA /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BB11C92652F0031ADCA /* common.c */; };
+		20E17BC91C92652F0031ADCA /* decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BB31C92652F0031ADCA /* decode.c */; };
+		20E17BCA1C92652F0031ADCA /* frame.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BB51C92652F0031ADCA /* frame.c */; };
+		20E17BCB1C92652F0031ADCA /* huffman.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BB71C92652F0031ADCA /* huffman.c */; };
+		20E17BCC1C92652F0031ADCA /* mp3_decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BB91C92652F0031ADCA /* mp3_decoder.c */; };
+		20E17BCD1C92652F0031ADCA /* scale_factors.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BBA1C92652F0031ADCA /* scale_factors.c */; };
+		20E17BCE1C92652F0031ADCA /* side_info.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BBC1C92652F0031ADCA /* side_info.c */; };
+		20E17BCF1C92652F0031ADCA /* wav.c in Sources */ = {isa = PBXBuildFile; fileRef = 20E17BBE1C92652F0031ADCA /* wav.c */; };
+		20E17BD01C92652F0031ADCA /* dewindow.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20E17BC11C92652F0031ADCA /* dewindow.txt */; };
+		20E17BD11C92652F0031ADCA /* huffdec.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20E17BC21C92652F0031ADCA /* huffdec.txt */; };
 		B7064DD51BB44BF700ECD501 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B74449771BB253AC004B9498 /* AVFoundation.framework */; };
 		B70E4D351BB5984F0083F4C9 /* PulleyViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B70E4D341BB5984F0083F4C9 /* PulleyViewController.m */; };
 		B70E4D4F1BB5B7860083F4C9 /* choosed@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = B70E4D4E1BB5B7860083F4C9 /* choosed@2x.png */; };
@@ -58,6 +70,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		20E17BAD1C92652F0031ADCA /* audio_data_buf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = audio_data_buf.c; sourceTree = "<group>"; };
+		20E17BAE1C92652F0031ADCA /* audio_data_buf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = audio_data_buf.h; sourceTree = "<group>"; };
+		20E17BAF1C92652F0031ADCA /* bit_stream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bit_stream.c; sourceTree = "<group>"; };
+		20E17BB01C92652F0031ADCA /* bit_stream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bit_stream.h; sourceTree = "<group>"; };
+		20E17BB11C92652F0031ADCA /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = common.c; sourceTree = "<group>"; };
+		20E17BB21C92652F0031ADCA /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		20E17BB31C92652F0031ADCA /* decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = decode.c; sourceTree = "<group>"; };
+		20E17BB41C92652F0031ADCA /* decode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = decode.h; sourceTree = "<group>"; };
+		20E17BB51C92652F0031ADCA /* frame.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = frame.c; sourceTree = "<group>"; };
+		20E17BB61C92652F0031ADCA /* frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = frame.h; sourceTree = "<group>"; };
+		20E17BB71C92652F0031ADCA /* huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = huffman.c; sourceTree = "<group>"; };
+		20E17BB81C92652F0031ADCA /* huffman.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = huffman.h; sourceTree = "<group>"; };
+		20E17BB91C92652F0031ADCA /* mp3_decoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mp3_decoder.c; sourceTree = "<group>"; };
+		20E17BBA1C92652F0031ADCA /* scale_factors.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = scale_factors.c; sourceTree = "<group>"; };
+		20E17BBB1C92652F0031ADCA /* scale_factors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scale_factors.h; sourceTree = "<group>"; };
+		20E17BBC1C92652F0031ADCA /* side_info.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = side_info.c; sourceTree = "<group>"; };
+		20E17BBD1C92652F0031ADCA /* side_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = side_info.h; sourceTree = "<group>"; };
+		20E17BBE1C92652F0031ADCA /* wav.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wav.c; sourceTree = "<group>"; };
+		20E17BBF1C92652F0031ADCA /* wav.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wav.h; sourceTree = "<group>"; };
+		20E17BC11C92652F0031ADCA /* dewindow.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dewindow.txt; sourceTree = "<group>"; };
+		20E17BC21C92652F0031ADCA /* huffdec.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = huffdec.txt; sourceTree = "<group>"; };
 		B70E4D331BB5984F0083F4C9 /* PulleyViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PulleyViewController.h; sourceTree = "<group>"; };
 		B70E4D341BB5984F0083F4C9 /* PulleyViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PulleyViewController.m; sourceTree = "<group>"; };
 		B70E4D4E1BB5B7860083F4C9 /* choosed@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "choosed@2x.png"; sourceTree = "<group>"; };
@@ -162,6 +195,51 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		20E17BAB1C92652F0031ADCA /* decode */ = {
+			isa = PBXGroup;
+			children = (
+				20E17BC01C92652F0031ADCA /* resource */,
+				20E17BAC1C92652F0031ADCA /* mp3 */,
+			);
+			name = decode;
+			path = zFM/audio/decode;
+			sourceTree = SOURCE_ROOT;
+		};
+		20E17BAC1C92652F0031ADCA /* mp3 */ = {
+			isa = PBXGroup;
+			children = (
+				20E17BB21C92652F0031ADCA /* common.h */,
+				20E17BB11C92652F0031ADCA /* common.c */,
+				20E17BBF1C92652F0031ADCA /* wav.h */,
+				20E17BBE1C92652F0031ADCA /* wav.c */,
+				20E17BAF1C92652F0031ADCA /* bit_stream.c */,
+				20E17BB01C92652F0031ADCA /* bit_stream.h */,
+				20E17BAE1C92652F0031ADCA /* audio_data_buf.h */,
+				20E17BAD1C92652F0031ADCA /* audio_data_buf.c */,
+				20E17BB81C92652F0031ADCA /* huffman.h */,
+				20E17BB71C92652F0031ADCA /* huffman.c */,
+				20E17BB61C92652F0031ADCA /* frame.h */,
+				20E17BB51C92652F0031ADCA /* frame.c */,
+				20E17BBD1C92652F0031ADCA /* side_info.h */,
+				20E17BBC1C92652F0031ADCA /* side_info.c */,
+				20E17BBB1C92652F0031ADCA /* scale_factors.h */,
+				20E17BBA1C92652F0031ADCA /* scale_factors.c */,
+				20E17BB41C92652F0031ADCA /* decode.h */,
+				20E17BB31C92652F0031ADCA /* decode.c */,
+				20E17BB91C92652F0031ADCA /* mp3_decoder.c */,
+			);
+			path = mp3;
+			sourceTree = "<group>";
+		};
+		20E17BC01C92652F0031ADCA /* resource */ = {
+			isa = PBXGroup;
+			children = (
+				20E17BC11C92652F0031ADCA /* dewindow.txt */,
+				20E17BC21C92652F0031ADCA /* huffdec.txt */,
+			);
+			path = resource;
+			sourceTree = "<group>";
+		};
 		B70E4D311BB5984F0083F4C9 /* baseUI */ = {
 			isa = PBXGroup;
 			children = (
@@ -223,6 +301,7 @@
 		B73A96231BD0EECC00521252 /* player */ = {
 			isa = PBXGroup;
 			children = (
+				20E17BAB1C92652F0031ADCA /* decode */,
 				B73A962A1BD0EECC00521252 /* AQPlayer.h */,
 				B73A962B1BD0EECC00521252 /* AQPlayer.mm */,
 				B73A96261BD0EECC00521252 /* AQDownloader.h */,
@@ -480,7 +559,9 @@
 				B70E4D4F1BB5B7860083F4C9 /* choosed@2x.png in Resources */,
 				B78062B41BB54A420099C52E /* play@2x.png in Resources */,
 				B73A96111BD0ECDD00521252 /* README.md in Resources */,
+				20E17BD11C92652F0031ADCA /* huffdec.txt in Resources */,
 				B79BDED11BB16167001083DA /* Images.xcassets in Resources */,
+				20E17BD01C92652F0031ADCA /* dewindow.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -499,21 +580,31 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				20E17BC61C92652F0031ADCA /* audio_data_buf.c in Sources */,
+				20E17BCD1C92652F0031ADCA /* scale_factors.c in Sources */,
 				B73A964B1BD0EECC00521252 /* CAXException.cpp in Sources */,
+				20E17BC81C92652F0031ADCA /* common.c in Sources */,
+				20E17BCA1C92652F0031ADCA /* frame.c in Sources */,
+				20E17BC91C92652F0031ADCA /* decode.c in Sources */,
 				B73A96481BD0EECC00521252 /* AQRing.m in Sources */,
 				B73A964A1BD0EECC00521252 /* CAStreamBasicDescription.cpp in Sources */,
+				20E17BCF1C92652F0031ADCA /* wav.c in Sources */,
+				20E17BC71C92652F0031ADCA /* bit_stream.c in Sources */,
 				B79BDECF1BB16167001083DA /* AppDelegate.m in Sources */,
 				B73A963D1BD0EECC00521252 /* CustomEQViewController.m in Sources */,
 				B73A96421BD0EECC00521252 /* CustomEQ.m in Sources */,
+				20E17BCC1C92652F0031ADCA /* mp3_decoder.c in Sources */,
 				B73A96461BD0EECC00521252 /* AQGraph.mm in Sources */,
 				B73A96431BD0EECC00521252 /* IpodEQ.m in Sources */,
 				B73A96491BD0EECC00521252 /* CAComponentDescription.cpp in Sources */,
+				20E17BCE1C92652F0031ADCA /* side_info.c in Sources */,
 				B73A963E1BD0EECC00521252 /* IpodEQViewController.m in Sources */,
 				B70E4D351BB5984F0083F4C9 /* PulleyViewController.m in Sources */,
 				B73A964D1BD0EECC00521252 /* IpodEQViewCell.m in Sources */,
 				B73A96451BD0EECC00521252 /* AQDownloader.m in Sources */,
 				B73A96441BD0EECC00521252 /* AQConverter.mm in Sources */,
 				B77F6D941BB5467F00FD555B /* MyTool.m in Sources */,
+				20E17BCB1C92652F0031ADCA /* huffman.c in Sources */,
 				B73A96471BD0EECC00521252 /* AQPlayer.mm in Sources */,
 				B73A963F1BD0EECC00521252 /* PlayerViewController.m in Sources */,
 				B73A963C1BD0EECC00521252 /* AudioPlayViewController.m in Sources */,
