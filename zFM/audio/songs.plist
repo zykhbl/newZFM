@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<string>http://222.245.78.21/file3.data.weipan.cn/54741929/03d6638b88660c5dcf6b6cfabcc0f6c1903a0a77?ip=1455875439,183.60.177.228&amp;ssig=%2BrY34E8NxJ&amp;Expires=1455877229&amp;KID=sae,l30zoo1wmz&amp;fn=Nightwish%20-%20She%20Is%20My%20Sin.mp3&amp;skiprd=2&amp;se_ip_debug=183.60.177.228&amp;corp=2&amp;from=1221134&amp;wsiphost=local</string>
+	<string>http://sc.111ttt.com/up/mp3/201159/E04705E239B367A492D399A4CBB69C5C.mp3</string>
+	<string>http://mobileapi.5sing.kugou.com/song/transcoding?songid=12626585&amp;songtype=fc&amp;bitrate=128</string>
+	<string>http://mobileapi.5sing.kugou.com/song/transcoding?songid=12946453&amp;songtype=fc&amp;bitrate=128</string>
+	<string>http://mobileapi.5sing.kugou.com/song/transcoding?songid=2444839&amp;songtype=yc&amp;bitrate=128</string>
+	<string>http://dl.loveq.cn/program/LoveQ.cn_2015-10-11-1.mp3</string>
+	<string>http://dl.loveq.cn/program/LoveQ.cn_2015-09-20-1.mp3</string>
+</array>
+</plist>
