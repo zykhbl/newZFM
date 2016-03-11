@@ -9,6 +9,8 @@
 #ifndef mp3Decoder_wav_h
 #define mp3Decoder_wav_h
 
+#define T wav
+
 extern void writeWAVHeader(FILE *f);
 extern void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int done, FILE *outFile, unsigned long *psampFrames);
 

@@ -12,7 +12,7 @@
 
 #include "wav.h"
 
-struct T {
+struct wav {
     char    riff[4];
     int     riff_size;
     char    wave[4];
@@ -45,12 +45,12 @@ void writeWAVHeader(FILE *f) {
     short channels = 2;
     
     //RIFF header
-    writeString(f, "RIFF");//riff id
+    writeString(f, (char *)"RIFF");//riff id
     writeInt(f, len - 8);//riff chunk size *PLACEHOLDER*
-    writeString(f, "WAVE");//wave type
+    writeString(f, (char *)"WAVE");//wave type
     
     //fmt chunk
-    writeString(f, "fmt ");//fmt id
+    writeString(f, (char *)"fmt ");//fmt id
     writeInt(f, 16);//fmt chunk size
     writeShort(f, 1);//format: 1(PCM)
     writeShort(f, channels);//channels
@@ -60,7 +60,7 @@ void writeWAVHeader(FILE *f) {
     writeShort(f, (short) (16));//bPSample
     
     //data chunk
-    writeString(f, "data");//data id
+    writeString(f, (char *)"data");//data id
     writeInt(f, len - 44);//data chunk size *PLACEHOLDER*
 }
 

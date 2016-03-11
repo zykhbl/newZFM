@@ -372,9 +372,9 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
     typedef short PCM[2][SSLIMIT][SBLIMIT];
     PCM *pcm_sample;
     
-    pcm_sample = (PCM *)mem_alloc((long) sizeof(PCM), "PCM Samp");
+    pcm_sample = (PCM *)mem_alloc((long) sizeof(PCM), (char *)"PCM Samp");
     
-    unsigned long sample_frames = 0;
+//    unsigned long sample_frames = 0;
     while(!end_bs(bs)) {
         int sync = seek_sync(bs, SYNC_WORD, SYNC_WORD_LENGTH);//尝试帧同步
         if (!sync) {

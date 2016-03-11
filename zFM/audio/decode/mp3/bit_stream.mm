@@ -15,7 +15,7 @@
 
 //open and initialize the buffer
 void alloc_buffer(struct bit_stream *bs, int size) {
-    bs->buf = (unsigned char *) mem_alloc(size * sizeof(unsigned char), "buffer");
+    bs->buf = (unsigned char *) mem_alloc(size * sizeof(unsigned char), (char *)"buffer");
     bs->buf_size = size;
 }
 
@@ -47,7 +47,7 @@ void close_bit_stream_r(struct bit_stream *bs) {
 
 struct bit_stream *create_bit_stream(char *bs_filenam, int size) {
     struct bit_stream *t;
-    t = (struct bit_stream *)mem_alloc((long) sizeof(*t), "Bit_stream_struc");
+    t = (struct bit_stream *)mem_alloc((long) sizeof(*t), (char *)"Bit_stream_struc");
     
     open_bit_stream_r(t, bs_filenam, size);
     
@@ -115,8 +115,8 @@ int putmask[9] = {0x0, 0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff};
 //read N bit from the bit stream
 unsigned long getbits(struct bit_stream *bs, int N) {
     unsigned long val = 0;
-    register int j = N;
-    register int k, tmp;
+    int j = N;
+    int k, tmp;
     
     if (N > MAX_LENGTH) {
         printf("Cannot read or write more than %d bits at a time.\n", MAX_LENGTH);

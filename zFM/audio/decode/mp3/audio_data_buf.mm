@@ -14,9 +14,9 @@
 
 struct audio_data_buf*create_audio_data_buf(int buf_size) {
     struct audio_data_buf*t;
-    t = (struct audio_data_buf*)mem_alloc((long) sizeof(*t), "audio_data_buf");
+    t = (struct audio_data_buf*)mem_alloc((long) sizeof(*t), (char *)"audio_data_buf");
     
-    t->buf = (unsigned int *) mem_alloc(buf_size * sizeof(unsigned int), "buffer");
+    t->buf = (unsigned int *) mem_alloc(buf_size * sizeof(unsigned int), (char *)"buffer");
     t->buf_size = buf_size;
     
     t->buf_bit_idx = 8;
@@ -53,8 +53,8 @@ unsigned long hsstell(struct audio_data_buf*buf) {
 //read N bit from the bit stream
 unsigned long hgetbits(struct audio_data_buf*buf, int N) {
     unsigned long val = 0;
-    register int j = N;
-    register int k, tmp;
+    int j = N;
+    int k, tmp;
     
     if (N > MAX_LENGTH) {
         printf("Cannot read or write more than %d bits at a time.\n", MAX_LENGTH);

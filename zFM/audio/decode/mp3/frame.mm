@@ -15,7 +15,7 @@
 
 struct frame *create_frame() {
     struct frame *t;
-    t = (struct frame *)mem_alloc((long) sizeof(*t), "frame");
+    t = (struct frame *)mem_alloc((long) sizeof(*t), (char *)"frame");
     
     return t;
 }
@@ -93,7 +93,7 @@ void hdr_to_frps(struct frame *fr_ps) {
     }
 }
 
-char *layer_names[3] = {"I", "II", "III"};
+char *layer_names[3] = {(char *)"I", (char *)"II", (char *)"III"};
 
 int bitrate[3][15] = {
     {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448},
@@ -103,7 +103,7 @@ int bitrate[3][15] = {
 
 double s_freq[4] = {44.1, 48, 32, 0};
 
-char *mode_names[4] = {"stereo", "j-stereo", "dual-ch", "single-ch"};
+char *mode_names[4] = {(char *)"stereo", (char *)"j-stereo", (char *)"dual-ch", (char *)"single-ch"};
 
 void writeHdr(struct frame *fr_ps) {
     layer *info = &fr_ps->header;

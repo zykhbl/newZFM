@@ -16,7 +16,7 @@
 #include "decode.h"
 
 int huffman_initialized = FALSE;
-char *huffdec = "/Users/weidong_wu/mp3/resource/huffdec.txt";
+char *huffdec = (char *)"/Users/weidong_wu/mp3/resource/huffdec.txt";
 
 void initialize_huffman() {
     FILE *fi;
@@ -647,7 +647,7 @@ void III_hybrid(double fsIn[SSLIMIT], double tsOut[SSLIMIT], int sb, int ch, str
 //Pass the subband sample through the synthesis window
 //create in synthesis filter
 void create_syn_filter(double filter[64][SBLIMIT]) {
-    register int i, k;
+    int i, k;
     
     for (i = 0; i < 64; i++) {
         for (k = 0; k < 32; k++) {
@@ -661,7 +661,7 @@ void create_syn_filter(double filter[64][SBLIMIT]) {
     }
 }
 
-char *dewindow = "/Users/weidong_wu/mp3/resource/dewindow.txt";
+char *dewindow = (char *)"/Users/weidong_wu/mp3/resource/dewindow.txt";
 
 //Window the restored sample
 //read in synthesis window
@@ -694,8 +694,8 @@ void read_syn_window(double window[HAN_SIZE]) {
 }
 
 int subBandSynthesis(double *bandPtr, int channel, short *samples) {
-    register int i, j, k;
-    register double *bufOffsetPtr, sum;
+    int i, j, k;
+    double *bufOffsetPtr, sum;
     static int init = 1;
     typedef double NN[64][32];
     static NN * filter;
@@ -706,10 +706,10 @@ int subBandSynthesis(double *bandPtr, int channel, short *samples) {
     int clip = 0;//count & return how many samples clipped
     
     if (init) {
-        buf = (BB *)mem_alloc(sizeof(BB), "BB");
-        filter = (NN *)mem_alloc(sizeof(NN), "NN");
+        buf = (BB *)mem_alloc(sizeof(BB), (char *)"BB");
+        filter = (NN *)mem_alloc(sizeof(NN), (char *)"NN");
         create_syn_filter(*filter);
-        window = (double *)mem_alloc(sizeof(double) * HAN_SIZE, "WIN");
+        window = (double *)mem_alloc(sizeof(double) * HAN_SIZE, (char *)"WIN");
         read_syn_window(window);
         init = 0;
     }

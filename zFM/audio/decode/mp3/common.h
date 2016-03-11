@@ -31,7 +31,7 @@
 #define	FALSE				0
 #define	TRUE				1
 
-#define	MIN(A, B)			((A) < (B) ? (A) : (B))
+#define	MINNUM(A, B)			((A) < (B) ? (A) : (B))
 
 #define	SBLIMIT				32
 #define	SSLIMIT				18
