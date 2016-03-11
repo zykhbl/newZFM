@@ -358,7 +358,8 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
 
 - (void)doDecoderFile:(NSString*)url srcFilePos:(SInt64)pos {
     char *mp3_filename = (char *)[url cStringUsingEncoding:NSUTF8StringEncoding];
-    struct bit_stream *bs = create_bit_stream(mp3_filename, BUFFER_SIZE);
+    openTableFile(mp3_filename);
+//    struct bit_stream *bs = create_bit_stream(mp3_filename, BUFFER_SIZE);
 //    struct audio_data_buf *buf = create_audio_data_buf(BUFFER_SIZE);
 //    struct frame *fr_ps = create_frame();
 //    struct III_side_info *side_info = create_III_side_info();
