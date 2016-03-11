@@ -9,15 +9,15 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "AQDownloader.h"
-#import "AQConverter.h"
+#import "AQDecoder.h"
 
 @protocol AQPlayerDelegate;
 
-@interface AQPlayer : NSObject <AQDownloaderDelegate, AQConverterDelegate>
+@interface AQPlayer : NSObject <AQDownloaderDelegate, AQDecoderDelegate>
 
 @property (nonatomic, assign) id<AQPlayerDelegate> delegate;
 @property (nonatomic, strong) AQDownloader *downloader;
-@property (nonatomic, strong) AQConverter *converter;
+@property (nonatomic, strong) AQDecoder *decoder;
 
 + (void)playForeground;
 + (id)sharedAQPlayer;

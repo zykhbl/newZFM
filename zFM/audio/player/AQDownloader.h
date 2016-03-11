@@ -16,7 +16,7 @@
 @property (nonatomic, strong) NSString *url;
 @property (nonatomic, strong) NSURLConnection *conn;
 @property (nonatomic, assign) off_t contentLength;
-@property (nonatomic, assign) int bytesReceived;
+@property (nonatomic, assign) unsigned long bytesReceived;
 
 @end
 

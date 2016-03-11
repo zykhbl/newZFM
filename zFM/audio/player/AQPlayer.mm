@@ -13,7 +13,7 @@
 
 @synthesize delegate;
 @synthesize downloader;
-@synthesize converter;
+@synthesize decoder;
 
 + (void)playForeground {
     AVAudioSession *session = [AVAudioSession sharedInstance];
@@ -34,9 +34,9 @@
     [self.downloader.conn cancel];
     [self.downloader cancel];
     self.downloader = nil;
-    [self.converter setStopRunloop:YES];
-    [self.converter signal];
-    self.converter = nil;
+    [self.decoder setStopRunloop:YES];
+    [self.decoder signal];
+    self.decoder = nil;
 }
 
 - (void)play:(NSString*)url {
@@ -49,48 +49,48 @@
 }
 
 - (void)play {
-    [self.converter play];
-    [self.converter signal];
+    [self.decoder play];
+    [self.decoder signal];
 }
 
 - (void)stop {
-    [self.converter stop];
+    [self.decoder stop];
 }
 
 - (void)seek:(NSTimeInterval)seekToTime {
-    [self.converter setBytesCanRead:self.downloader.bytesReceived];
-    [self.converter seek:seekToTime];
+    [self.decoder setBytesCanRead:self.downloader.bytesReceived];
+    [self.decoder seek:seekToTime];
 }
 
 - (void)selectIpodEQPreset:(NSInteger)index {
-    if (self.converter != nil) {
-        [self.converter selectIpodEQPreset:index];
+    if (self.decoder != nil) {
+        [self.decoder selectIpodEQPreset:index];
     }    
 }
 
 - (void)changeEQ:(int)index value:(CGFloat)v {
-    if (self.converter != nil) {
-        [self.converter changeEQ:index value:v];
+    if (self.decoder != nil) {
+        [self.decoder changeEQ:index value:v];
     }
 }
 
 //===========AQDownloaderDelegate===========
 - (void)AQDownloader:(AQDownloader*)downloader convert:(NSString*)filePath {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        if (self.converter == nil) {
-            self.converter = [[AQConverter alloc] init];
-            self.converter.delegate = self;
-            [self.converter setContentLength:self.downloader.contentLength];
-            [self.converter setBytesCanRead:self.downloader.bytesReceived];
+        if (self.decoder == nil) {
+            self.decoder = [[AQDecoder alloc] init];
+            self.decoder.delegate = self;
+            [self.decoder setContentLength:self.downloader.contentLength];
+            [self.decoder setBytesCanRead:self.downloader.bytesReceived];
         }
-        [self.converter doConvertFile:filePath];
+        [self.decoder doDecoderFile:filePath];
     });
 }
 
 - (void)AQDownloader:(AQDownloader*)downloader signal:(BOOL)flag {
-    if (self.converter != nil) {
-        [self.converter setBytesCanRead:self.downloader.bytesReceived];
-        [self.converter signal];
+    if (self.decoder != nil) {
+        [self.decoder setBytesCanRead:self.downloader.bytesReceived];
+        [self.decoder signal];
     }
 }
 
@@ -114,17 +114,17 @@
 }
 
 //===========AQConverterDelegate===========
-- (void)AQConverter:(AQConverter*)converter duration:(NSTimeInterval)duration zeroCurrentTime:(BOOL)flag {
+- (void)AQConverter:(AQDecoder*)decoder duration:(NSTimeInterval)duration zeroCurrentTime:(BOOL)flag {
     if (self.delegate && [self.delegate respondsToSelector:@selector(AQPlayer:duration:zeroCurrentTime:)]) {
         [self.delegate AQPlayer:self duration:duration zeroCurrentTime:flag];
     }
 }
 
-- (void)AQConverter:(AQConverter*)converter timerStop:(BOOL)flag {
+- (void)AQConverter:(AQDecoder*)decoder timerStop:(BOOL)flag {
     [self timerStop:flag];
 }
 
-- (void)AQConverter:(AQConverter*)converter playNext:(BOOL)flag {
+- (void)AQConverter:(AQDecoder*)decoder playNext:(BOOL)flag {
     if (self.delegate && [self.delegate respondsToSelector:@selector(AQPlayer:playNext:)]) {
         [self.delegate AQPlayer:self playNext:flag];
     }

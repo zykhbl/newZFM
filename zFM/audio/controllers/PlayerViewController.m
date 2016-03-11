@@ -74,7 +74,7 @@
 }
 
 - (void)move:(UILongPressGestureRecognizer*)gestureRecognizer {
-    if (self.player.converter != nil) {
+    if (self.player.decoder != nil) {
         if ([gestureRecognizer state] == UIGestureRecognizerStateBegan) {
             self.longPressTaped = YES;
             self.beginTouchPoint = [gestureRecognizer locationInView:self.tapView];
