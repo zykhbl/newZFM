@@ -16,9 +16,9 @@
 #import <stdlib.h>
 #import <stdio.h>
 #import <string.h>
-#import "common.h"
-#import "wav.h"
-#import "decode.h"
+#include "common.h"
+//#import "wav.h"
+//#import "decode.h"
 
 #define kDefaultSize 1024 * 10
 
