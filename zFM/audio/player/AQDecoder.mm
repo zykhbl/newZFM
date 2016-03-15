@@ -25,102 +25,22 @@
 static pthread_mutex_t mutex;
 static pthread_cond_t cond;
 
-static id<AQDecoderDelegate> afioDelegate;
 static off_t contentLength;
 static off_t bytesCanRead;
+static BOOL isSeek;
 static off_t bytesOffset;
+static SInt64 srcFilePos;
+static UInt64 audioDataOffset;
+static UInt32 bitRate;
+static NSTimeInterval duration;
 static BOOL stopRunloop;
-
-typedef struct {
-    AudioFileID                  srcFileID;
-    SInt64                       srcFilePos;
-    char                         *srcBuffer;
-    UInt32                       srcBufferSize;
-    CAStreamBasicDescription     srcFormat;
-    UInt32                       srcSizePerPacket;
-    AudioStreamPacketDescription *packetDescriptions;
-    
-    UInt64                       audioDataOffset;
-    UInt32                       bitRate;
-    NSTimeInterval               duration;
-} AudioFileIO, *AudioFileIOPtr;
-
-static void timerStop(BOOL flag) {
-    if (afioDelegate && [afioDelegate respondsToSelector:@selector(AQDecoder:timerStop:)]) {
-        [afioDelegate AQDecoder:nil timerStop:flag];
-    }
-}
-
-static OSStatus encoderDataProc(AudioConverterRef inAudioConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) {
-    AudioFileIOPtr afio = (AudioFileIOPtr)inUserData;
-    
-    UInt32 maxPackets = afio->srcBufferSize / afio->srcSizePerPacket;
-    if (*ioNumberDataPackets > maxPackets) {
-        *ioNumberDataPackets = maxPackets;
-    }
-    
-    pthread_mutex_lock(&mutex);
-    while ((bytesOffset + afio->srcBufferSize) > bytesCanRead && !stopRunloop) {
-        if (bytesCanRead < contentLength) {
-            timerStop(YES);
-            pthread_cond_wait(&cond, &mutex);
-        } else {
-            break;
-        }
-    }
-    pthread_mutex_unlock(&mutex);
-    
-    UInt32 outNumBytes;
-    OSStatus error = AudioFileReadPackets(afio->srcFileID, false, &outNumBytes, afio->packetDescriptions, afio->srcFilePos, ioNumberDataPackets, afio->srcBuffer);
-    if (error) { NSLog(@"Input Proc Read error: %d (%4.4s)\n", (int)error, (char*)&error); return error; }
-    
-    bytesOffset += outNumBytes;
-    afio->srcFilePos += *ioNumberDataPackets;
-    
-    ioData->mBuffers[0].mData = afio->srcBuffer;
-    ioData->mBuffers[0].mDataByteSize = outNumBytes;
-    ioData->mBuffers[0].mNumberChannels = afio->srcFormat.mChannelsPerFrame;
-    
-    if (outDataPacketDescription) {
-        if (afio->packetDescriptions) {
-            *outDataPacketDescription = afio->packetDescriptions;
-        } else {
-            *outDataPacketDescription = NULL;
-        }
-    }
-    
-    return error;
-}
-
-static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
-    UInt32 cookieSize = 0;
-    OSStatus error = AudioFileGetPropertyInfo(sourceFileID, kAudioFilePropertyMagicCookieData, &cookieSize, NULL);
-    
-    if (noErr == error && 0 != cookieSize) {
-        char *cookie = new char [cookieSize];
-        
-        error = AudioFileGetProperty(sourceFileID, kAudioFilePropertyMagicCookieData, &cookieSize, cookie);
-        if (noErr == error) {
-            error = AudioConverterSetProperty(converter, kAudioConverterDecompressionMagicCookie, cookieSize, cookie);
-            if (error) { NSLog(@"Could not Set kAudioConverterDecompressionMagicCookie on the Audio Converter!\n"); }
-        } else {
-            NSLog(@"Could not Get kAudioFilePropertyMagicCookieData from source file!\n");
-        }
-        
-        delete [] cookie;
-    }
-}
 
 @interface AQDecoder ()
 
 @property (nonatomic, assign) CFURLRef sourceURL;
-@property (nonatomic, assign) AudioConverterRef converter;
 @property (nonatomic, assign) AudioFileID sourceFileID;
-@property (nonatomic, assign) AudioFileIOPtr afio;
-@property (nonatomic, assign) char *outputBuffer;
-@property (nonatomic, assign) AudioStreamPacketDescription *outputPacketDescriptions;
+@property (nonatomic, assign) CAStreamBasicDescription *srcFormat;
 @property (nonatomic, strong) AQGraph *graph;
-@property (nonatomic, assign) BOOL again;
 
 @end
 
@@ -129,12 +49,10 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
 @synthesize delegate;
 
 @synthesize sourceURL;
-@synthesize converter;
 @synthesize sourceFileID;
-@synthesize afio;
-@synthesize outputBuffer;
+@synthesize srcFormat;
+
 @synthesize graph;
-@synthesize again;
 
 - (void)clear {
     if (self.sourceURL) {
@@ -142,32 +60,13 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
         self.sourceURL = NULL;
     }
     
-    if (self.converter) {
-        AudioConverterDispose(self.converter);
-    }
-    
     if (self.sourceFileID) {
         AudioFileClose(self.sourceFileID);
     }
     
-    if (self.afio != NULL) {
-        if (self.afio->srcBuffer) {
-            delete [] self.afio->srcBuffer;
-        }
-        
-        if (self.afio->packetDescriptions) {
-            delete [] self.afio->packetDescriptions;
-        }
-        
-        free(self.afio);
-    }
-    
-    if (self.outputBuffer) {
-        delete [] self.outputBuffer;
-    }
-    
-    if (self.outputPacketDescriptions) {
-        delete [] self.outputPacketDescriptions;
+    if (self.srcFormat) {
+        free(self.srcFormat);
+        self.srcFormat = NULL;
     }
 }
 
@@ -184,17 +83,12 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
     if (self) {
         pthread_mutex_init(&mutex, NULL);
         pthread_cond_init(&cond, NULL);
-        
-        afioDelegate = nil;
+
         contentLength = bytesCanRead = bytesOffset = 0;
         stopRunloop = NO;
         
         self.sourceURL = NULL;
         self.sourceFileID = 0;
-        self.converter = 0;
-        self.outputBuffer = NULL;
-        self.outputPacketDescriptions = NULL;
-        self.again = NO;
     }
     
     return self;
@@ -224,12 +118,17 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
     }
 }
 
-- (void)doConvertFile:(NSString*)url srcFilePos:(SInt64)pos {
-    CAStreamBasicDescription srcFormat, dstFormat;
-    
-    self.afio = (AudioFileIOPtr)malloc(sizeof(AudioFileIO));
-    bzero(self.afio, sizeof(AudioFileIO));
-    afioDelegate = self.delegate;
+- (void)timerStop:(BOOL)flag {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:timerStop:)]) {
+        [self.delegate AQDecoder:nil timerStop:flag];
+    }
+}
+
+- (void)doDecoderFile:(NSString*)url srcFilePos:(SInt64)pos {
+    isSeek = NO;
+    srcFilePos = pos;
+    self.srcFormat = (CAStreamBasicDescription*)malloc(sizeof(CAStreamBasicDescription));
+    CAStreamBasicDescription dstFormat;
     
     try {
         if (self.sourceURL == NULL) {
@@ -247,118 +146,47 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
                 return;
             }
             
-            timerStop(YES);
+            [self timerStop:YES];
             pthread_cond_wait(&cond, &mutex);
             error = AudioFileOpenURL(sourceURL, kAudioFileReadPermission, 0, &sourceFileID);
         }
         pthread_mutex_unlock(&mutex);
         
-        UInt32 size = sizeof(srcFormat);
-        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataFormat, &size, &srcFormat), "couldn't get source data format");
+        UInt32 size = sizeof(*srcFormat);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataFormat, &size, self.srcFormat), "couldn't get source data format");
         
-        size = sizeof(self.afio->audioDataOffset);
-        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataOffset, &size, &self.afio->audioDataOffset), "couldn't get kAudioFilePropertyDataOffset");
+        size = sizeof(audioDataOffset);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataOffset, &size, &audioDataOffset), "couldn't get kAudioFilePropertyDataOffset");
         if (bytesOffset == 0) {
-            bytesOffset = self.afio->audioDataOffset;
+            bytesOffset = audioDataOffset;
         }
         
-        size = sizeof(self.afio->bitRate);
-        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyBitRate, &size, &self.afio->bitRate), "couldn't get kAudioFilePropertyBitRate");
+        size = sizeof(bitRate);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyBitRate, &size, &bitRate), "couldn't get kAudioFilePropertyBitRate");
         if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:duration:zeroCurrentTime:)]) {
-            self.afio->duration = (contentLength - self.afio->audioDataOffset) * 8 / self.afio->bitRate;
-            [self.delegate AQDecoder:self duration:self.afio->duration zeroCurrentTime:(pos == 0 ? YES : NO)];
+            duration = (contentLength - bytesOffset) * 8 / bitRate;
+            [self.delegate AQDecoder:self duration:duration zeroCurrentTime:(pos == 0 ? YES : NO)];
         }
         
-        dstFormat.mSampleRate = srcFormat.mSampleRate;
+        dstFormat.mSampleRate = self.srcFormat->mSampleRate;
         dstFormat.mFormatID = kAudioFormatLinearPCM;
-        dstFormat.mChannelsPerFrame = srcFormat.NumberChannels();
+        dstFormat.mChannelsPerFrame = self.srcFormat->NumberChannels();
         dstFormat.mBitsPerChannel = 16;
         dstFormat.mBytesPerPacket = dstFormat.mBytesPerFrame = 2 * dstFormat.mChannelsPerFrame;
         dstFormat.mFramesPerPacket = 1;
         dstFormat.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger;
         
-        XThrowIfError(AudioConverterNew(&srcFormat, &dstFormat, &converter), "AudioConverterNew failed!");
-        
-        readCookie(self.sourceFileID, self.converter);
-        
-        size = sizeof(srcFormat);
-        XThrowIfError(AudioConverterGetProperty(self.converter, kAudioConverterCurrentInputStreamDescription, &size, &srcFormat), "AudioConverterGetProperty kAudioConverterCurrentInputStreamDescription failed!");
-        
-        size = sizeof(dstFormat);
-        XThrowIfError(AudioConverterGetProperty(self.converter, kAudioConverterCurrentOutputStreamDescription, &size, &dstFormat), "AudioConverterGetProperty kAudioConverterCurrentOutputStreamDescription failed!");
-        
         [self createGraph:dstFormat];
         
-        self.afio->srcFileID = self.sourceFileID;
-        self.afio->srcBufferSize = kDefaultSize;
-        self.afio->srcBuffer = new char [self.afio->srcBufferSize];
-        self.afio->srcFilePos = pos;
-        self.afio->srcFormat = srcFormat;
-        
-        if (srcFormat.mBytesPerPacket == 0) {
-            size = sizeof(self.afio->srcSizePerPacket);
-            XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyMaximumPacketSize, &size, &self.afio->srcSizePerPacket), "AudioFileGetProperty kAudioFilePropertyMaximumPacketSize failed!");
-            self.afio->packetDescriptions = new AudioStreamPacketDescription[self.afio->srcBufferSize / self.afio->srcSizePerPacket];
-        } else {
-            self.afio->srcSizePerPacket = srcFormat.mBytesPerPacket;
-            self.afio->packetDescriptions = NULL;
-        }
-        
-        UInt32 outputSizePerPacket = dstFormat.mBytesPerPacket;
-        UInt32 theOutputBufSize = kDefaultSize;
-        self.outputBuffer = new char[theOutputBufSize];
-        
-        if (outputSizePerPacket == 0) {
-            size = sizeof(outputSizePerPacket);
-            XThrowIfError(AudioConverterGetProperty(self.converter, kAudioConverterPropertyMaximumOutputPacketSize, &size, &outputSizePerPacket), "AudioConverterGetProperty kAudioConverterPropertyMaximumOutputPacketSize failed!");
-            self.outputPacketDescriptions = new AudioStreamPacketDescription [theOutputBufSize / outputSizePerPacket];
-        }
-        
-        UInt32 numOutputPackets = theOutputBufSize / outputSizePerPacket;
-        while (!stopRunloop) {
-            AudioBufferList fillBufList;
-            fillBufList.mNumberBuffers = 1;
-            fillBufList.mBuffers[0].mNumberChannels = dstFormat.mChannelsPerFrame;
-            fillBufList.mBuffers[0].mDataByteSize = theOutputBufSize;
-            fillBufList.mBuffers[0].mData = self.outputBuffer;
-            
-            UInt32 ioOutputDataPackets = numOutputPackets;
-            error = AudioConverterFillComplexBuffer(self.converter, encoderDataProc, self.afio, &ioOutputDataPackets, &fillBufList, self.outputPacketDescriptions);
-            if (error) {
-                if (kAudioConverterErr_HardwareInUse == error) {
-                    NSLog(@"Audio Converter returned kAudioConverterErr_HardwareInUse!\n");
-                } else {
-                    XThrowIfError(error, "AudioConverterFillComplexBuffer error!");
-                }
-            } else {
-                if (ioOutputDataPackets == 0) {
-                    self.again = YES;
-                    break;
-                }
-            }
-            
-            if (noErr == error) {
-                timerStop(NO);
-                
-                [self.graph addBuf:fillBufList.mBuffers[0].mData numberBytes:fillBufList.mBuffers[0].mDataByteSize];
-            }
-        }
+        [self decoderFrame:url];
     } catch (CAXException e) {
         char buf[256];
         NSLog(@"Error: %s (%s)\n", e.mOperation, e.FormatError(buf));
     }
-    
-    if (self.again) {
-        self.again = NO;
-        SInt64 pos = self.afio->srcFilePos;
-        [self clear];
-        [self doConvertFile:url srcFilePos:pos];
-    }
 }
 
-- (void)doDecoderFile:(NSString*)url srcFilePos:(SInt64)pos {
+- (void)decoderFrame:(NSString*)url {
     char *mp3_filename = (char *)[url cStringUsingEncoding:NSUTF8StringEncoding];
-    openTableFile(mp3_filename);
     struct bit_stream *bs = create_bit_stream(mp3_filename, BUFFER_SIZE);
     struct audio_data_buf *buf = create_audio_data_buf(BUFFER_SIZE);
     struct frame *fr_ps = create_frame();
@@ -374,13 +202,36 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
     
     pcm_sample = (PCM *)mem_alloc((long) sizeof(PCM), (char *)"PCM Samp");
     
-//    unsigned long sample_frames = 0;
-    while(!end_bs(bs)) {
+    unsigned long sample_frames = 0;
+    int frame_start = 0;
+    while(!stopRunloop) {
+//        pthread_mutex_lock(&mutex);
+//        while (bytesOffset > bytesCanRead && !stopRunloop) {
+//            if (bytesCanRead < contentLength) {
+//                [self timerStop:YES];
+//                pthread_cond_wait(&cond, &mutex);
+//            } else {
+//                break;
+//            }
+//        }
+//        pthread_mutex_unlock(&mutex);
+        
+        if (isSeek) {
+            isSeek = NO;
+            frameNum = srcFilePos;
+            seek_bit_stream(bs, bytesOffset);
+            clear_bit_stream(bs);
+            clear_audio_data_buf(buf);
+//            memset(fr_ps, 0, sizeof(*fr_ps));
+//            memset(side_info, 0, sizeof(*side_info));
+//            frame_start = 0;
+        }
+        
         int sync = seek_sync(bs, SYNC_WORD, SYNC_WORD_LENGTH);//尝试帧同步
         if (!sync) {
             done = TRUE;
             printf("\nFrame cannot be located\n");
-//            out_fifo(*pcm_sample, 3, fr_ps->stereo, done, musicout, &sample_frames);
+            out_fifo(*pcm_sample, 3, fr_ps->stereo, done, &sample_frames, (__bridge void*)self);
             break;
         }
         
@@ -392,7 +243,8 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
             writeHdr(fr_ps);
         }
         
-        printf("\r%05lu", frameNum++);
+//        printf("\r%05lu", frameNum++);
+        frameNum++;
         
         if (fr_ps->header.error_protection) {//如果有的话，读取错误码
             buffer_CRC(bs, &old_crc);
@@ -404,7 +256,6 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
                 int nSlots, main_data_end = 0, flush_main;
                 int bytes_to_discard, gr, ch, ss, sb;
                 unsigned long bitsPerSlot = 8;
-                static int frame_start = 0;
                 
                 III_get_side_info(bs, side_info, fr_ps);//读取Side信息
                 
@@ -430,7 +281,7 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
                 frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置(可以直接使用变量nSlots，不用再调用函数main_data_slots计算一次)
                 
                 if (bytes_to_discard < 0) {//TODO: 实现为实时流读取时，可能要在这里控制暂停
-                    printf("Not enough main data to decode frame %ld.  Frame discarded.\n", frameNum - 1);
+                    printf("Not enough main data to decode frame %ld, Frame discarded.\n", frameNum - 1);
                     break;
                 }
                 
@@ -487,11 +338,11 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
                         }
                     }
                     
-//                    out_fifo(*pcm_sample, 18, fr_ps->stereo, done, musicout, &sample_frames);//PCM输出(Output PCM sample points for one granule(颗粒))
+                    out_fifo(*pcm_sample, 18, fr_ps->stereo, done, &sample_frames, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
                 }
                 
                 if(clip > 0) {
-                    printf("\n%d samples clipped.\n", clip);
+//                    printf("\n%d samples clipped.\n", clip);
                 }
                 
                 break;
@@ -509,6 +360,32 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
     free_audio_data_buf(&buf);
     free_bit_stream(&bs);
     printf("\nDecoding done.\n");
+}
+
+void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int done, unsigned long *psampFrames, void *myself) {
+    int i, j, l;
+    static short int outsamp[1600];
+    static long k = 0;
+    
+    if (!done) {
+        for (i = 0; i < num; i++) {
+            for (j = 0; j < SBLIMIT; j++) {
+                (*psampFrames)++;
+                for (l = 0; l < stereo; l++) {
+                    if (!(k % 1600) && k) {//k > 0 且 k 整除 1600 时写入文件
+                        AQDecoder *decoder = (__bridge AQDecoder*)myself;
+                        [decoder.graph addBuf:outsamp numberBytes:1600 * sizeof(short int)];
+                        k = 0;
+                    }
+                    outsamp[k++] = pcm_sample[l][i][j];
+                }
+            }
+        }
+    } else {
+        AQDecoder *decoder = (__bridge AQDecoder*)myself;
+        [decoder.graph addBuf:outsamp numberBytes:((int)k) * sizeof(short int)];
+        k = 0;
+    }
 }
 
 - (void)doDecoderFile:(NSString*)url {
@@ -530,10 +407,11 @@ static void readCookie(AudioFileID sourceFileID, AudioConverterRef converter) {
 }
 
 - (void)seek:(NSTimeInterval)seekToTime {
-    bytesOffset = self.afio->audioDataOffset + (contentLength - self.afio->audioDataOffset) * (seekToTime / self.afio->duration);
+    isSeek = YES;
+    bytesOffset = audioDataOffset + (contentLength - audioDataOffset) * (seekToTime / duration);
     
-    double packetDuration = self.afio->srcFormat.mFramesPerPacket / self.afio->srcFormat.mSampleRate;
-    self.afio->srcFilePos = (UInt32)(seekToTime / packetDuration);
+    double packetDuration = self.srcFormat->mFramesPerPacket / self.srcFormat->mSampleRate;
+    srcFilePos = (UInt32)(seekToTime / packetDuration);
     [self signal];
 }
 

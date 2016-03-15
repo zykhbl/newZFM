@@ -114,17 +114,17 @@
 }
 
 //===========AQConverterDelegate===========
-- (void)AQConverter:(AQDecoder*)decoder duration:(NSTimeInterval)duration zeroCurrentTime:(BOOL)flag {
+- (void)AQDecoder:(AQDecoder*)decoder duration:(NSTimeInterval)duration zeroCurrentTime:(BOOL)flag {
     if (self.delegate && [self.delegate respondsToSelector:@selector(AQPlayer:duration:zeroCurrentTime:)]) {
         [self.delegate AQPlayer:self duration:duration zeroCurrentTime:flag];
     }
 }
 
-- (void)AQConverter:(AQDecoder*)decoder timerStop:(BOOL)flag {
+- (void)AQDecoder:(AQDecoder*)decoder timerStop:(BOOL)flag {
     [self timerStop:flag];
 }
 
-- (void)AQConverter:(AQDecoder*)decoder playNext:(BOOL)flag {
+- (void)AQDecoder:(AQDecoder*)decoder playNext:(BOOL)flag {
     if (self.delegate && [self.delegate respondsToSelector:@selector(AQPlayer:playNext:)]) {
         [self.delegate AQPlayer:self playNext:flag];
     }

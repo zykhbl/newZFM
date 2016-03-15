@@ -36,15 +36,22 @@ int seek_sync(struct bit_stream *bs, unsigned long sync, int N) {
     }
     
     val = getbits(bs, N);
+    
     while (((val & maxi) != sync) && (!end_bs(bs))) {
         val <<= ALIGNING;
         val |= getbits(bs, ALIGNING);
     }
     
-    if (end_bs(bs)) {
-        return 0;
+    int version = (int)pre_get_version(bs);
+    int lay = (int)pre_get_layer(bs);
+    if (version != 1 || lay != 1) {
+        return seek_sync(bs, SYNC_WORD, SYNC_WORD_LENGTH);
     } else {
-        return 1;
+        if (end_bs(bs)) {
+            return 0;
+        } else {
+            return 1;
+        }
     }
 }
 

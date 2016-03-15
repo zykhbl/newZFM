@@ -119,7 +119,7 @@ unsigned long getbits(struct bit_stream *bs, int N) {
     int k, tmp;
     
     if (N > MAX_LENGTH) {
-        printf("Cannot read or write more than %d bits at a time.\n", MAX_LENGTH);
+        printf("bit_stream cannot read more than %d bits at a time.\n", MAX_LENGTH);
     }
     
     bs->totbit += N;
@@ -136,6 +136,42 @@ unsigned long getbits(struct bit_stream *bs, int N) {
         bs->buf_bit_idx -= k;
         j -= k;
     }
+    return val;
+}
+
+void seek_bit_stream(struct bit_stream *bs, long offset) {
+    fseek(bs->pt, offset, SEEK_SET);
+}
+
+void clear_bit_stream(struct bit_stream *bs) {
+    bs->buf_byte_idx = -1;
+    bs->buf_bit_idx = 0;
+    bs->totbit = 0;
+    bs->mode = READ_MODE;
+    bs->eob = FALSE;
+    bs->eobs = FALSE;
+    bs->format = BINARY;
+}
+
+extern unsigned long pre_get_version(struct bit_stream *bs) {
+    unsigned long val = 0;
+    int tmp;
+    
+    tmp = bs->buf[bs->buf_byte_idx] & putmask[4];
+    tmp = tmp >> 3;
+    val |= tmp;
+    
+    return val;
+}
+
+unsigned long pre_get_layer(struct bit_stream *bs) {
+    unsigned long val = 0;
+    int tmp;
+    
+    tmp = bs->buf[bs->buf_byte_idx] & putmask[3];
+    tmp = tmp >> 1;
+    val |= tmp;
+    
     return val;
 }
 

@@ -28,5 +28,6 @@ extern unsigned long hgetbits(struct audio_data_buf*buf, int N);
 extern unsigned int hget1bit(struct audio_data_buf*buf);
 extern void rewindNbits(struct audio_data_buf*buf, int N);
 extern void rewindNbytes(struct audio_data_buf*buf, int N);
+extern void clear_audio_data_buf(struct audio_data_buf*buf);
 
 #endif /* audio_data_buf_h */

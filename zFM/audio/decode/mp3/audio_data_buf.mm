@@ -20,6 +20,7 @@ struct audio_data_buf*create_audio_data_buf(int buf_size) {
     t->buf_size = buf_size;
     
     t->buf_bit_idx = 8;
+    t->offset = 0;
     t->totbit = 0;
     t->buf_byte_idx = 0;
     
@@ -56,9 +57,9 @@ unsigned long hgetbits(struct audio_data_buf*buf, int N) {
     int j = N;
     int k, tmp;
     
-    if (N > MAX_LENGTH) {
-        printf("Cannot read or write more than %d bits at a time.\n", MAX_LENGTH);
-    }
+//    if (N > MAX_LENGTH) {
+//        printf("audio_data_buf cannot read %d, more than %d bits at a time.\n", N, MAX_LENGTH);
+//    }
     
     buf->totbit += N;
     while (j > 0) {
@@ -96,4 +97,11 @@ void rewindNbits(struct audio_data_buf*buf, int N) {
 void rewindNbytes(struct audio_data_buf*buf, int N) {
     buf->totbit -= N * 8;
     buf->buf_byte_idx -= N;
+}
+
+void clear_audio_data_buf(struct audio_data_buf*buf) {
+    buf->buf_bit_idx = 8;
+    buf->offset = 0;
+    buf->totbit = 0;
+    buf->buf_byte_idx = 0;
 }
