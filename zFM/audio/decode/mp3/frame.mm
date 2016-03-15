@@ -30,6 +30,10 @@ int seek_sync(struct bit_stream *bs, unsigned long sync, int N) {
     unsigned long val;
     long maxi = (int)pow(2.0, (double)N) - 1;
     
+    if (end_bs(bs)) {
+        return 0;
+    }
+    
     aligning = sstell(bs) % ALIGNING;
     if (aligning) {
         getbits(bs, (int)(ALIGNING - aligning));

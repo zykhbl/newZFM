@@ -222,9 +222,10 @@ static BOOL stopRunloop;
             seek_bit_stream(bs, bytesOffset);
             clear_bit_stream(bs);
             clear_audio_data_buf(buf);
-//            memset(fr_ps, 0, sizeof(*fr_ps));
-//            memset(side_info, 0, sizeof(*side_info));
-//            frame_start = 0;
+            memset(fr_ps, 0, sizeof(*fr_ps));
+            memset(side_info, 0, sizeof(*side_info));
+            memset(&III_scalefac, 0, sizeof(III_scalefac_t));
+            frame_start = 0;
         }
         
         int sync = seek_sync(bs, SYNC_WORD, SYNC_WORD_LENGTH);//尝试帧同步
