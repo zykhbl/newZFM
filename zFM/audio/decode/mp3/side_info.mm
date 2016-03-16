@@ -60,7 +60,7 @@ void III_get_side_info(struct bit_stream *bs, struct III_side_info*si, struct fr
                 
                 if (si->ch[ch].gr[gr].block_type == 0) {//Set region_count parameters since they are implicit in this case.
                     printf("Side info bad: block_type == 0 in split block.\n");
-                    exit(0);
+                    //??有时seek播放的时候，会解析到这里而出错，造成有时没有声音的问题??
                 } else if (si->ch[ch].gr[gr].block_type == 2 && si->ch[ch].gr[gr].mixed_block_flag == 0) {
                     si->ch[ch].gr[gr].region0_count = 8;//MI 9;
                 } else {

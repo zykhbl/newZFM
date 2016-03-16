@@ -19,12 +19,17 @@ struct audio_data_buf*create_audio_data_buf(int buf_size) {
     t->buf = (unsigned int *) mem_alloc(buf_size * sizeof(unsigned int), (char *)"buffer");
     t->buf_size = buf_size;
     
-    t->buf_bit_idx = 8;
-    t->offset = 0;
-    t->totbit = 0;
-    t->buf_byte_idx = 0;
+    init_audio_data_buf(t);
     
     return t;
+}
+
+void init_audio_data_buf(struct audio_data_buf*buf) {
+    memset(buf->buf, 0, buf->buf_size * sizeof(unsigned int));
+    buf->buf_bit_idx = 8;
+    buf->offset = 0;
+    buf->totbit = 0;
+    buf->buf_byte_idx = 0;
 }
 
 void free_audio_data_buf(struct audio_data_buf**bs) {
@@ -97,11 +102,4 @@ void rewindNbits(struct audio_data_buf*buf, int N) {
 void rewindNbytes(struct audio_data_buf*buf, int N) {
     buf->totbit -= N * 8;
     buf->buf_byte_idx -= N;
-}
-
-void clear_audio_data_buf(struct audio_data_buf*buf) {
-    buf->buf_bit_idx = 8;
-    buf->offset = 0;
-    buf->totbit = 0;
-    buf->buf_byte_idx = 0;
 }

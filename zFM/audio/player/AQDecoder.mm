@@ -204,6 +204,9 @@ static BOOL stopRunloop;
     
     unsigned long sample_frames = 0;
     int frame_start = 0;
+    short int outsamp[1600];
+    long k = 0;
+    
     while(!stopRunloop) {
 //        pthread_mutex_lock(&mutex);
 //        while (bytesOffset > bytesCanRead && !stopRunloop) {
@@ -220,19 +223,22 @@ static BOOL stopRunloop;
             isSeek = NO;
             frameNum = srcFilePos;
             seek_bit_stream(bs, bytesOffset);
-            clear_bit_stream(bs);
-            clear_audio_data_buf(buf);
+            init_bit_stream(bs);
+            init_audio_data_buf(buf);
             memset(fr_ps, 0, sizeof(*fr_ps));
             memset(side_info, 0, sizeof(*side_info));
             memset(&III_scalefac, 0, sizeof(III_scalefac_t));
+            memset(pcm_sample, 0, sizeof(PCM));
             frame_start = 0;
+            memset(outsamp, 0, sizeof(outsamp));
+            k = 0;
         }
         
         int sync = seek_sync(bs, SYNC_WORD, SYNC_WORD_LENGTH);//尝试帧同步
         if (!sync) {
             done = TRUE;
             printf("\nFrame cannot be located\n");
-            out_fifo(*pcm_sample, 3, fr_ps->stereo, done, &sample_frames, (__bridge void*)self);
+            out_fifo(*pcm_sample, 3, fr_ps->stereo, done, outsamp, &k, &sample_frames, (__bridge void*)self);
             break;
         }
         
@@ -339,7 +345,7 @@ static BOOL stopRunloop;
                         }
                     }
                     
-                    out_fifo(*pcm_sample, 18, fr_ps->stereo, done, &sample_frames, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
+                    out_fifo(*pcm_sample, 18, fr_ps->stereo, done, outsamp, &k, &sample_frames, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
                 }
                 
                 if(clip > 0) {
@@ -363,29 +369,27 @@ static BOOL stopRunloop;
     printf("\nDecoding done.\n");
 }
 
-void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int done, unsigned long *psampFrames, void *myself) {
+void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int done, short int *outsamp, long *k, unsigned long *psampFrames, void *myself) {
     int i, j, l;
-    static short int outsamp[1600];
-    static long k = 0;
     
     if (!done) {
         for (i = 0; i < num; i++) {
             for (j = 0; j < SBLIMIT; j++) {
                 (*psampFrames)++;
                 for (l = 0; l < stereo; l++) {
-                    if (!(k % 1600) && k) {//k > 0 且 k 整除 1600 时写入文件
+                    if (!(*k % 1600) && *k) {//k > 0 且 k 整除 1600 时写入文件
                         AQDecoder *decoder = (__bridge AQDecoder*)myself;
                         [decoder.graph addBuf:outsamp numberBytes:1600 * sizeof(short int)];
-                        k = 0;
+                        *k = 0;
                     }
-                    outsamp[k++] = pcm_sample[l][i][j];
+                    outsamp[(*k)++] = pcm_sample[l][i][j];
                 }
             }
         }
     } else {
         AQDecoder *decoder = (__bridge AQDecoder*)myself;
-        [decoder.graph addBuf:outsamp numberBytes:((int)k) * sizeof(short int)];
-        k = 0;
+        [decoder.graph addBuf:outsamp numberBytes:((int)(*k)) * sizeof(short int)];
+        *k = 0;
     }
 }
 

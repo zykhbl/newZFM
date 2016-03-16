@@ -31,13 +31,8 @@ void open_bit_stream_r(struct bit_stream *bs, char *bs_filenam, int size) {
     }
     
     alloc_buffer(bs, size);
-    bs->buf_byte_idx = -1;
-    bs->buf_bit_idx = 0;
-    bs->totbit = 0;
-    bs->mode = READ_MODE;
-    bs->eob = FALSE;
-    bs->eobs = FALSE;
-    bs->format = BINARY;
+    
+    init_bit_stream(bs);
 }
 
 void close_bit_stream_r(struct bit_stream *bs) {
@@ -52,6 +47,17 @@ struct bit_stream *create_bit_stream(char *bs_filenam, int size) {
     open_bit_stream_r(t, bs_filenam, size);
     
     return t;
+}
+
+void init_bit_stream(struct bit_stream *bs) {
+    memset(bs->buf, 0, bs->buf_size * sizeof(unsigned char));
+    bs->buf_byte_idx = -1;
+    bs->buf_bit_idx = 0;
+    bs->totbit = 0;
+    bs->mode = READ_MODE;
+    bs->eob = FALSE;
+    bs->eobs = FALSE;
+    bs->format = BINARY;
 }
 
 void free_bit_stream(struct bit_stream **bs) {
@@ -141,16 +147,6 @@ unsigned long getbits(struct bit_stream *bs, int N) {
 
 void seek_bit_stream(struct bit_stream *bs, long offset) {
     fseek(bs->pt, offset, SEEK_SET);
-}
-
-void clear_bit_stream(struct bit_stream *bs) {
-    bs->buf_byte_idx = -1;
-    bs->buf_bit_idx = 0;
-    bs->totbit = 0;
-    bs->mode = READ_MODE;
-    bs->eob = FALSE;
-    bs->eobs = FALSE;
-    bs->format = BINARY;
 }
 
 extern unsigned long pre_get_version(struct bit_stream *bs) {

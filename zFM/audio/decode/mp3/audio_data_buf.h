@@ -19,6 +19,7 @@ struct audio_data_buf {
 };
 
 extern struct audio_data_buf*create_audio_data_buf(int buf_size);
+extern void init_audio_data_buf(struct audio_data_buf*buf);
 extern void free_audio_data_buf(struct audio_data_buf**bs);
 
 extern unsigned int hget_buf_size(struct audio_data_buf*buf);
@@ -28,6 +29,5 @@ extern unsigned long hgetbits(struct audio_data_buf*buf, int N);
 extern unsigned int hget1bit(struct audio_data_buf*buf);
 extern void rewindNbits(struct audio_data_buf*buf, int N);
 extern void rewindNbytes(struct audio_data_buf*buf, int N);
-extern void clear_audio_data_buf(struct audio_data_buf*buf);
 
 #endif /* audio_data_buf_h */
