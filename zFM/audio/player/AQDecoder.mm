@@ -251,8 +251,8 @@
             writeHdr(fr_ps);
         }
         
-        printf("%05lu\n", frameNum++);
-//        frameNum++;
+//        printf("%05lu\n", frameNum++);
+        frameNum++;
         
         if (fr_ps->header.error_protection) {//如果有的话，读取错误码
             buffer_CRC(bs, &old_crc);
@@ -363,7 +363,7 @@
         }
         
         if(clip > 0) {
-            printf("\n%d samples clipped.\n", clip);
+//            printf("\n%d samples clipped.\n", clip);
         }
     }
     
