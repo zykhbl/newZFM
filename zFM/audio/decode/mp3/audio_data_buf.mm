@@ -72,7 +72,7 @@ unsigned long hgetbits(struct audio_data_buf*buf, int N) {
             buf->buf_bit_idx = 8;
             buf->buf_byte_idx++;
             if (buf->buf_byte_idx > buf->offset) {
-                printf("Buffer overflow !!\n");
+                printf("Buffer overflow %ld > %ld!!\n", buf->buf_byte_idx, buf->offset);
                 exit(3);
             }
         }

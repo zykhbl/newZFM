@@ -90,8 +90,13 @@ void will_refill_buffer(struct bit_stream *bs) {
         decoder.bytesOffset++;
         if (bs->eob == 0 || bs->buf_byte_idx == bs->eob) {
             bs->eob = (int)fread(bs->buf, sizeof(unsigned char), bs->buf_size, bs->pt);
-            if (feof(bs->pt)) {
-                bs->eobs = TRUE;
+            if (bs->eob == 0 && feof(bs->pt)) {
+                if (decoder.bytesCanRead == decoder.contentLength) {
+                    bs->eobs = TRUE;
+                } else {
+                    [decoder wait];
+                    bs->eob = (int)fread(bs->buf, sizeof(unsigned char), bs->buf_size, bs->pt);
+                }
             }
             bs->buf_byte_idx = 0;
         }

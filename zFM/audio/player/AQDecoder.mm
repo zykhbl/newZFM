@@ -20,8 +20,6 @@
 #include "wav.h"
 #include "decode.h"
 
-#define kDefaultSize 1024 * 10
-
 @interface AQDecoder ()
 
 @property (nonatomic, assign) CFURLRef sourceURL;
@@ -243,130 +241,129 @@
         
         decode_info(bs, fr_ps);//解码帧头
         
+        if (fr_ps->header.sampling_frequency == 3) {
+            continue;
+        }
+        
         hdr_to_frps(fr_ps);//将fr_ps.header中的信息解读到fr_ps的相关域中
         
         if(frameNum == 0) {//输出相关信息
             writeHdr(fr_ps);
         }
         
-//        printf("%05lu\n", frameNum++);
-        frameNum++;
+        printf("%05lu\n", frameNum++);
+//        frameNum++;
         
         if (fr_ps->header.error_protection) {//如果有的话，读取错误码
             buffer_CRC(bs, &old_crc);
         }
         
-        switch (fr_ps->header.lay) {
-            case 3: {
-                //main_data_end 可以不初始化为0，但如果不初始化，它会在使用了栈中上一次循环遗留下的值，虽然不影响结果，但是会使打印信息看起来很怪
-                int nSlots, main_data_end = 0, flush_main;
-                int bytes_to_discard, gr, ch, ss, sb;
-                unsigned long bitsPerSlot = 8;
-                
-                III_get_side_info(bs, side_info, fr_ps);//读取Side信息
-                
-                nSlots = main_data_slots(fr_ps);//计算slot个数
-                
-                for (; nSlots > 0; nSlots--) {//读主数据(Audio Data)
-                    hputbuf(buf, (unsigned int)getbits(bs, 8), 8);
-                }
-                
-                main_data_end = (int)(hsstell(buf) / 8);//of privious frame
-                if ((flush_main = (int)(hsstell(buf) % bitsPerSlot))) {
-                    hgetbits(buf, (int)(bitsPerSlot - flush_main));
-                    main_data_end++;
-                }
-                
-                bytes_to_discard = frame_start - main_data_end - side_info->main_data_begin;
-                unsigned buf_size = hget_buf_size(buf);
-                if(main_data_end > buf_size) {//环结构，缓存数组从[0, buf_size - 1], 不需要 >= buf_size，因为hputbuf，hgetbits等操作做了求余；不用应该也可以
-                    frame_start -= buf_size;
-                    rewindNbytes(buf, buf_size);
-                }
-                
-                frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置(可以直接使用变量nSlots，不用再调用函数main_data_slots计算一次)
-                
-                if (bytes_to_discard < 0) {
-                    printf("Not enough main data to decode frame %ld, Frame discarded.\n", frameNum - 1);
-                    
+        //只支持lay == 3的解码，在seek_sync函数中也有做处理，只要是因为seek播放时，seek_sync不够准确导致的
+        //main_data_end 可以不初始化为0，但如果不初始化，它会在使用了栈中上一次循环遗留下的值，虽然不影响结果，但是会使打印信息看起来很怪
+        int nSlots, main_data_end = 0, flush_main;
+        int bytes_to_discard, gr, ch, ss, sb;
+        unsigned long bitsPerSlot = 8;
+        
+        III_get_side_info(bs, side_info, fr_ps);//读取Side信息
+        
+        BOOL flag = NO;
+        for (gr = 0; gr < 2; gr++) {
+            for (ch = 0; ch < fr_ps->stereo; ch++) {
+                if (side_info->ch[ch].gr[gr].window_switching_flag && side_info->ch[ch].gr[gr].block_type == 0) {
+                    flag = YES;
                     break;
                 }
-                
-                for (; bytes_to_discard > 0; bytes_to_discard--) {//丢弃已读或无用的的字节
-                    hgetbits(buf, 8);
-                }
-                
-                for (gr = 0; gr < 2; gr++) {
-                    for (ch = 0; ch < fr_ps->stereo; ch++) {
-                        if (side_info->ch[ch].gr[gr].window_switching_flag && side_info->ch[ch].gr[gr].block_type == 0) {
-                            break;
-                        }
-                    }
-                }
-                
-                int clip = 0;
-                for (gr = 0; gr < 2; gr++) {
-                    double lr[2][SBLIMIT][SSLIMIT], ro[2][SBLIMIT][SSLIMIT];
-                    
-                    for (ch = 0; ch < fr_ps->stereo; ch++) {//主解码
-                        long int is[SBLIMIT][SSLIMIT];//保存量化数据
-                        int part2_start;
-                        part2_start = (int)hsstell(buf);//totbit 的位置，即：当前帧音频主数据(main data)：scale_factor + hufman_code的开始位置
-                        
-                        III_get_scale_factors(buf, &III_scalefac, side_info, gr, ch, fr_ps);//获取比例因子
-                        
-                        III_hufman_decode(buf, is, side_info, ch, gr, part2_start, fr_ps);//huffman解码
-                        
-                        III_dequantize_sample(is, ro[ch], &III_scalefac, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), ch, fr_ps);//反量化采样
-                    }
-                    
-                    III_stereo(ro, lr, &III_scalefac, (struct gr_info_s *)&(side_info->ch[0].gr[gr]), fr_ps);//立体声处理
-                    
-                    for (ch = 0; ch < fr_ps->stereo; ch++) {
-                        double re[SBLIMIT][SSLIMIT];
-                        double hybridIn[SBLIMIT][SSLIMIT];//hybrid filter input
-                        double hybridOut[SBLIMIT][SSLIMIT];//hybrid filter out
-                        double polyPhaseIn[SBLIMIT];//polyPhase input
-                        
-                        III_reorder(lr[ch], re, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), fr_ps);
-                        
-                        III_antialias(re, hybridIn, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), fr_ps);//抗锯齿处理
-                        
-                        for (sb = 0; sb < SBLIMIT; sb++) {//IMDCT(hybrid synthesis)
-                            III_hybrid(hybridIn[sb], hybridOut[sb], sb, ch, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), fr_ps);
-                        }
-                        
-                        for (ss = 0; ss < 18; ss++) {//多相频率倒置
-                            for (sb = 0; sb < SBLIMIT; sb++) {
-                                if ((ss % 2) && (sb % 2)) {
-                                    hybridOut[sb][ss] = -hybridOut[sb][ss];
-                                }
-                            }
-                        }
-                        
-                        for (ss = 0; ss < 18; ss++) {//多相合成
-                            for (sb = 0; sb < SBLIMIT; sb++) {
-                                polyPhaseIn[sb] = hybridOut[sb][ss];
-                            }
-                            
-                            clip += subBandSynthesis(polyPhaseIn, ch, &((*pcm_sample)[ch][ss][0]));//子带合成
-                        }
-                    }
-                    
-                    out_fifo(*pcm_sample, 18, fr_ps->stereo, done, outsamp, &k, &sample_frames, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
-                }
-                
-                if(clip > 0) {
-//                    printf("\n%d samples clipped.\n", clip);
-                }
-                
-                break;
             }
-            default: {
-                printf("\nOnly layer III supported!\n");
-                exit(1);
-                break;
+        }
+        if (flag) {
+            continue;
+        }
+        
+        nSlots = main_data_slots(fr_ps);//计算slot个数
+        
+        for (; nSlots > 0; nSlots--) {//读主数据(Audio Data)
+            hputbuf(buf, (unsigned int)getbits(bs, 8), 8);
+        }
+        
+        main_data_end = (int)(hsstell(buf) / 8);//of privious frame
+        if ((flush_main = (int)(hsstell(buf) % bitsPerSlot))) {
+            hgetbits(buf, (int)(bitsPerSlot - flush_main));
+            main_data_end++;
+        }
+        
+        bytes_to_discard = frame_start - main_data_end - side_info->main_data_begin;
+        unsigned buf_size = hget_buf_size(buf);
+        if(main_data_end > buf_size) {//环结构，缓存数组从[0, buf_size - 1], 不需要 >= buf_size，因为hputbuf，hgetbits等操作做了求余；不用应该也可以
+            frame_start -= buf_size;
+            rewindNbytes(buf, buf_size);
+        }
+        
+        frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置(可以直接使用变量nSlots，不用再调用函数main_data_slots计算一次)
+        
+        if (bytes_to_discard < 0) {
+            printf("Not enough main data to decode frame %ld, Frame discarded.\n", frameNum - 1);
+            
+            continue;
+        }
+        
+        for (; bytes_to_discard > 0; bytes_to_discard--) {//丢弃已读或无用的的字节
+            hgetbits(buf, 8);
+        }
+        
+        int clip = 0;
+        for (gr = 0; gr < 2; gr++) {
+            double lr[2][SBLIMIT][SSLIMIT], ro[2][SBLIMIT][SSLIMIT];
+            
+            for (ch = 0; ch < fr_ps->stereo; ch++) {//主解码
+                long int is[SBLIMIT][SSLIMIT];//保存量化数据
+                int part2_start;
+                part2_start = (int)hsstell(buf);//totbit 的位置，即：当前帧音频主数据(main data)：scale_factor + hufman_code的开始位置
+                
+                III_get_scale_factors(buf, &III_scalefac, side_info, gr, ch, fr_ps);//获取比例因子
+                
+                III_hufman_decode(buf, is, side_info, ch, gr, part2_start, fr_ps);//huffman解码
+                
+                III_dequantize_sample(is, ro[ch], &III_scalefac, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), ch, fr_ps);//反量化采样
             }
+            
+            III_stereo(ro, lr, &III_scalefac, (struct gr_info_s *)&(side_info->ch[0].gr[gr]), fr_ps);//立体声处理
+            
+            for (ch = 0; ch < fr_ps->stereo; ch++) {
+                double re[SBLIMIT][SSLIMIT];
+                double hybridIn[SBLIMIT][SSLIMIT];//hybrid filter input
+                double hybridOut[SBLIMIT][SSLIMIT];//hybrid filter out
+                double polyPhaseIn[SBLIMIT];//polyPhase input
+                
+                III_reorder(lr[ch], re, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), fr_ps);
+                
+                III_antialias(re, hybridIn, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), fr_ps);//抗锯齿处理
+                
+                for (sb = 0; sb < SBLIMIT; sb++) {//IMDCT(hybrid synthesis)
+                    III_hybrid(hybridIn[sb], hybridOut[sb], sb, ch, (struct gr_info_s *)&(side_info->ch[ch].gr[gr]), fr_ps);
+                }
+                
+                for (ss = 0; ss < 18; ss++) {//多相频率倒置
+                    for (sb = 0; sb < SBLIMIT; sb++) {
+                        if ((ss % 2) && (sb % 2)) {
+                            hybridOut[sb][ss] = -hybridOut[sb][ss];
+                        }
+                    }
+                }
+                
+                for (ss = 0; ss < 18; ss++) {//多相合成
+                    for (sb = 0; sb < SBLIMIT; sb++) {
+                        polyPhaseIn[sb] = hybridOut[sb][ss];
+                    }
+                    
+                    clip += subBandSynthesis(polyPhaseIn, ch, &((*pcm_sample)[ch][ss][0]));//子带合成
+                }
+            }
+            
+            out_fifo(*pcm_sample, 18, fr_ps->stereo, done, outsamp, &k, &sample_frames, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
+        }
+        
+        if(clip > 0) {
+            printf("\n%d samples clipped.\n", clip);
         }
     }
     
@@ -407,19 +404,17 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int do
     [self doDecoderFile:url srcFilePos:0];
 }
 
-- (int)wait {
+- (void)wait {
     pthread_mutex_lock(&mutex);
     while (self.bytesOffset + BUFFER_SIZE > self.bytesCanRead) {
         if (self.bytesCanRead < self.contentLength) {
             [self timerStop:YES];
             pthread_cond_wait(&cond, &mutex);
         } else {
-            pthread_mutex_unlock(&mutex);
-            return 1;
+            break;
         }
     }
     pthread_mutex_unlock(&mutex);
-    return 0;
 }
 
 - (void)signal {

@@ -21,7 +21,7 @@
 @property (nonatomic, assign) off_t bytesOffset;
 
 - (void)doDecoderFile:(NSString*)url;
-- (int)wait;
+- (void)wait;
 - (void)signal;
 
 - (void)play;
