@@ -241,7 +241,7 @@
         
         decode_info(bs, fr_ps);//解码帧头
         
-        if (fr_ps->header.sampling_frequency == 3) {
+        if (fr_ps->header.sampling_frequency == 3) {//丢弃当前帧
             continue;
         }
         
@@ -275,7 +275,7 @@
                 }
             }
         }
-        if (flag) {
+        if (flag) {//丢弃当前帧
             continue;
         }
         
@@ -300,7 +300,7 @@
         
         frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置(可以直接使用变量nSlots，不用再调用函数main_data_slots计算一次)
         
-        if (bytes_to_discard < 0) {
+        if (bytes_to_discard < 0) {//丢弃当前帧
             printf("Not enough main data to decode frame %ld, Frame discarded.\n", frameNum - 1);
             
             continue;
