@@ -14,7 +14,7 @@
 
 struct III_side_info*create_III_side_info() {
     struct III_side_info*t;
-    t = (struct III_side_info*)mem_alloc((long) sizeof(*t), "side_info");
+    t = (struct III_side_info*)mem_alloc((long) sizeof(*t), (char *)"side_info");
     
     return t;
 }
@@ -60,7 +60,7 @@ void III_get_side_info(struct bit_stream *bs, struct III_side_info*si, struct fr
                 
                 if (si->ch[ch].gr[gr].block_type == 0) {//Set region_count parameters since they are implicit in this case.
                     printf("Side info bad: block_type == 0 in split block.\n");
-                    //??有时seek播放的时候，会解析到这里而出错，造成有时没有声音的问题??
+//                    exit(0);// ??在网络流媒体下，有时seek播放的时候，会解析到这里而出错，所以把这一步的判断放在主干上，并丢弃不正确的帧??
                 } else if (si->ch[ch].gr[gr].block_type == 2 && si->ch[ch].gr[gr].mixed_block_flag == 0) {
                     si->ch[ch].gr[gr].region0_count = 8;//MI 9;
                 } else {

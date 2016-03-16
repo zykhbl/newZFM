@@ -6,6 +6,7 @@
 //  Copyright © 2016年 zykhbl. All rights reserved.
 //
 
+#import "AQDecoder.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -40,11 +41,13 @@ void close_bit_stream_r(struct bit_stream *bs) {
     desalloc_buffer(bs);
 }
 
-struct bit_stream *create_bit_stream(char *bs_filenam, int size) {
+struct bit_stream *create_bit_stream(char *bs_filenam, int size, void *decoder) {
     struct bit_stream *t;
     t = (struct bit_stream *)mem_alloc((long) sizeof(*t), (char *)"Bit_stream_struc");
     
     open_bit_stream_r(t, bs_filenam, size);
+    
+    t->aq_decoder = decoder;
     
     return t;
 }
@@ -55,7 +58,7 @@ void init_bit_stream(struct bit_stream *bs) {
     bs->buf_bit_idx = 0;
     bs->totbit = 0;
     bs->mode = READ_MODE;
-    bs->eob = FALSE;
+    bs->eob = 0;
     bs->eobs = FALSE;
     bs->format = BINARY;
 }
@@ -83,16 +86,14 @@ void will_refill_buffer(struct bit_stream *bs) {
     if (!bs->buf_bit_idx) {
         bs->buf_bit_idx = 8;
         bs->buf_byte_idx++;
-        if (bs->buf_byte_idx == bs->eob) {
+        AQDecoder *decoder = (__bridge AQDecoder*)(bs->aq_decoder);
+        decoder.bytesOffset++;
+        if (bs->eob == 0 || bs->buf_byte_idx == bs->eob) {
+            bs->eob = (int)fread(bs->buf, sizeof(unsigned char), bs->buf_size, bs->pt);
             if (feof(bs->pt)) {
                 bs->eobs = TRUE;
-            } else {
-                bs->eob = (int)fread(bs->buf, sizeof(unsigned char), bs->buf_size, bs->pt);
-                if (feof(bs->pt)) {
-                    bs->eobs = TRUE;
-                }
-                bs->buf_byte_idx = 0;
             }
+            bs->buf_byte_idx = 0;
         }
     }
 }

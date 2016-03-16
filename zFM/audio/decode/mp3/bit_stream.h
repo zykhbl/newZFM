@@ -9,6 +9,7 @@
 #ifndef bit_stream_h
 #define bit_stream_h
 
+#include <stdlib.h>
 #include <stdio.h>
 
 struct bit_stream {
@@ -22,9 +23,11 @@ struct bit_stream {
     int             eob;            //end of buffer index
     int             eobs;           //end of bit stream flag
     char            format;         //format of file in rd mode (BINARY/ASCII)
+    
+    void            *aq_decoder;
 };
 
-extern struct bit_stream *create_bit_stream(char *bs_filenam, int size);
+extern struct bit_stream *create_bit_stream(char *bs_filenam, int size, void *decoder);
 extern void init_bit_stream(struct bit_stream *bs);
 extern void free_bit_stream(struct bit_stream **bs);
 

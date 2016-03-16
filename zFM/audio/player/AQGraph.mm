@@ -205,7 +205,7 @@ static OSStatus renderNotification(void *inRefCon, AudioUnitRenderActionFlags *i
         XThrowIfError(AudioUnitSetProperty (self.mEQ, kAudioUnitProperty_SampleRate, kAudioUnitScope_Output, 0, &graphSampleRate, sizeof (graphSampleRate)), "AudioUnitSetProperty failed!");
         NSArray *frequency = [[CustomEQ sharedCustomEQ] eqFrequencies];
         NSMutableArray *eqFrequencies = [[NSMutableArray alloc] initWithArray:frequency];
-        self.bands = [eqFrequencies count];
+        self.bands = (UInt32)[eqFrequencies count];
         
         XThrowIfError(AudioUnitSetProperty(self.mEQ, kAUNBandEQProperty_NumberOfBands, kAudioUnitScope_Global, 0, &bands, sizeof(self.bands)), "AudioUnitSetProperty failed!");
         for (NSUInteger i = 0; i < self.bands; i++) {

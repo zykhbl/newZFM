@@ -15,17 +15,18 @@
 @interface AQDecoder : NSObject
 
 @property (nonatomic, weak) id<AQDecoderDelegate> delegate;
+@property (nonatomic, assign) BOOL stopRunloop;
+@property (nonatomic, assign) off_t contentLength;
+@property (nonatomic, assign) off_t bytesCanRead;
+@property (nonatomic, assign) off_t bytesOffset;
 
 - (void)doDecoderFile:(NSString*)url;
+- (int)wait;
 - (void)signal;
 
 - (void)play;
 - (void)stop;
 - (void)seek:(NSTimeInterval)seekToTime;
-
-- (void)setContentLength:(off_t)len;
-- (void)setBytesCanRead:(off_t)bytes;
-- (void)setStopRunloop:(BOOL)stop;
 
 - (void)selectIpodEQPreset:(NSInteger)index;
 - (void)changeEQ:(int)index value:(CGFloat)v;

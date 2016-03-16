@@ -27,7 +27,7 @@
     self = [super init];
     if (self) {
         self.dict = [NSMutableDictionary dictionaryWithContentsOfFile:[[NSBundle mainBundle] pathForResource:@"ipodEQ.plist" ofType:nil]];
-        self.selected = [[self.dict objectForKey:@"selected"] integerValue];
+        self.selected = [[self.dict objectForKey:@"selected"] intValue];
         self.ipodEQS = (NSArray*)[self.dict objectForKey:@"ipodEQS"];
     }
     return self;

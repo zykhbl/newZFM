@@ -188,7 +188,7 @@
         
         if (offsetX != curSelectedOffsetX) {
             self.scrollingNow = YES;
-            CGFloat moveX = fabsf(curSelectedOffsetX - offsetX) / self.mainScrollView.bounds.size.width;
+            CGFloat moveX = fabs(curSelectedOffsetX - offsetX) / self.mainScrollView.bounds.size.width;
             CGFloat propertion = scaleWeights * moveX;
             
             self.nextSelectedIndex = self.curSelectedIndex + (offsetX > curSelectedOffsetX ? 1 : -1);
