@@ -1,19 +1,22 @@
-# zFM
+# newzFM
 
-献给所有的copy cat们，开始新项目了，所以暂时不再测试改bug。。
-
-zFM是一个基于苹果IOS SDK里的两个音频类子项目iPhoneACFileConvertTest ＋ iPhoneMixerEQGraphTest的二次开发，
-我只是在解码音频时加入pthread控制好音频流的下载和解码之间的缓冲，在播放时加入一个环结构做播放队列的缓冲。。
+newzFM是一个基于苹果IOS SDK里的音频类子项目iPhoneMixerEQGraphTest的二次开发，我只是在解码音频时加入pthread控制好音频流的下载和解码之间的缓冲，在播放时加入一个
+环结构做播放队列的缓冲。。其中解码部分使用ISO标准里提供的mp3解码器代码（但我进行了部分内容的修改，并按照自己的理解加上了部分注释，实现了流媒体的seek功能等， huffman
+解码等使用的是静态二叉树的硬解码技术，很多环节还有优化的空间），
 
 DONE:
-1.实时播放网络音频流
+1.实时播放网络mp3音频流
 2.加入Graph Unit均衡器
 
-ps：时间仓促，加上网络环境，音频类型的各种各样，可能会存在一些未知道的bugs。。
+ps：暂时已经知道的一些bugs：
+1.偶尔会出现Buffer overflow的错误；（不是必现）
+2.seek播放时，偶尔会出现杂音的错误；（不是必现）
+3.seek到最后，然后播放下一首时，会出现一点杂音的错误（必现）
 
-UNSUPPORT:
-1.不支持微软的WMA格式，因为专利问题，苹果提供的AudioFile SDK不支持WMA格式的音频文件读取
-2.无损的PCM格式音频在转码时可能会出错，应该只需要调整一下AudioConverterFillComplexBuffer就可以，即使这样不能解决，因为根本上PCM格式的音频就不需要转码，所以还有其他的解决方案
+psps：时间仓促，加上网络环境，可能会存在一些未知道的bugs
+
+Limit:
+1.只支持mp3格式的音频，即MPEG-1，LAYER 3的格式
 
 
 TODO:
