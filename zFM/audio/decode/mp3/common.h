@@ -43,6 +43,8 @@
 #define	PI64				PI/64
 #define	PI4					PI/4
 
+#define OUTPCMSIZE          512
+
 extern int putmask[9];
 
 extern void *mem_alloc(unsigned long block, char *item);

@@ -146,7 +146,7 @@
     PCM *pcm_sample = (PCM *)mem_alloc((long) sizeof(PCM), (char *)"PCM Samp");
     
     int frame_start = 0;
-    short int outsamp[1600];
+    short int outsamp[OUTPCMSIZE];
     long k = 0;
     
     while(!self.stopRunloop) {
@@ -318,10 +318,10 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int do
             for (int j = 0; j < SBLIMIT; j++) {
                 sample_frames++;
                 for (int l = 0; l < stereo; l++) {
-                    if (!(*k % 1600) && *k) {//k > 0 且 k 整除 1600 时写入文件
+                    if (!(*k % OUTPCMSIZE) && *k) {//k > 0 且 k 整除 100 时写入文件
                         AQDecoder *decoder = (__bridge AQDecoder*)myself;
                         [decoder timerStop:NO];
-                        [decoder.graph addBuf:outsamp numberBytes:1600 * sizeof(short int)];
+                        [decoder.graph addBuf:outsamp numberBytes:OUTPCMSIZE * sizeof(short int)];
                         *k = 0;
                     }
                     outsamp[(*k)++] = pcm_sample[l][i][j];
