@@ -16,7 +16,6 @@
 		20E17C5D1C92AAB90031ADCA /* huffman.mm in Sources */ = {isa = PBXBuildFile; fileRef = 20E17C4D1C92AAB90031ADCA /* huffman.mm */; };
 		20E17C5E1C92AAB90031ADCA /* scale_factors.mm in Sources */ = {isa = PBXBuildFile; fileRef = 20E17C4F1C92AAB90031ADCA /* scale_factors.mm */; };
 		20E17C5F1C92AAB90031ADCA /* side_info.mm in Sources */ = {isa = PBXBuildFile; fileRef = 20E17C511C92AAB90031ADCA /* side_info.mm */; };
-		20E17C601C92AAB90031ADCA /* wav.mm in Sources */ = {isa = PBXBuildFile; fileRef = 20E17C531C92AAB90031ADCA /* wav.mm */; };
 		20E17C611C92AAB90031ADCA /* dewindow.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20E17C561C92AAB90031ADCA /* dewindow.txt */; };
 		20E17C621C92AAB90031ADCA /* huffdec.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20E17C571C92AAB90031ADCA /* huffdec.txt */; };
 		B7064DD51BB44BF700ECD501 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B74449771BB253AC004B9498 /* AVFoundation.framework */; };
@@ -87,8 +86,6 @@
 		20E17C501C92AAB90031ADCA /* scale_factors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = scale_factors.h; sourceTree = "<group>"; };
 		20E17C511C92AAB90031ADCA /* side_info.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = side_info.mm; sourceTree = "<group>"; };
 		20E17C521C92AAB90031ADCA /* side_info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = side_info.h; sourceTree = "<group>"; };
-		20E17C531C92AAB90031ADCA /* wav.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = wav.mm; sourceTree = "<group>"; };
-		20E17C541C92AAB90031ADCA /* wav.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wav.h; sourceTree = "<group>"; };
 		20E17C561C92AAB90031ADCA /* dewindow.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dewindow.txt; sourceTree = "<group>"; };
 		20E17C571C92AAB90031ADCA /* huffdec.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = huffdec.txt; sourceTree = "<group>"; };
 		20E17C641C92B11B0031ADCA /* audio_data_buf.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = audio_data_buf.c; sourceTree = "<group>"; };
@@ -225,8 +222,6 @@
 			children = (
 				20E17C481C92AAB90031ADCA /* common.h */,
 				20E17C471C92AAB90031ADCA /* common.mm */,
-				20E17C541C92AAB90031ADCA /* wav.h */,
-				20E17C531C92AAB90031ADCA /* wav.mm */,
 				20E17C461C92AAB90031ADCA /* bit_stream.h */,
 				20E17C451C92AAB90031ADCA /* bit_stream.mm */,
 				20E17C441C92AAB90031ADCA /* audio_data_buf.h */,
@@ -629,7 +624,6 @@
 				B73A96481BD0EECC00521252 /* AQRing.m in Sources */,
 				B73A964A1BD0EECC00521252 /* CAStreamBasicDescription.cpp in Sources */,
 				20E17C5E1C92AAB90031ADCA /* scale_factors.mm in Sources */,
-				20E17C601C92AAB90031ADCA /* wav.mm in Sources */,
 				20E17C591C92AAB90031ADCA /* bit_stream.mm in Sources */,
 				B79BDECF1BB16167001083DA /* AppDelegate.m in Sources */,
 				B73A963D1BD0EECC00521252 /* CustomEQViewController.m in Sources */,

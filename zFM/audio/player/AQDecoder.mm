@@ -13,11 +13,10 @@
 #import "AQGraph.h"
 #import "IpodEQ.h"
 #import "CustomEQ.h"
-#import <stdlib.h>
-#import <stdio.h>
-#import <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "common.h"
-#include "wav.h"
 #include "decode.h"
 
 @interface AQDecoder ()
@@ -130,70 +129,10 @@
     }
 }
 
-- (void)doDecoderFile:(NSString*)url srcFilePos:(SInt64)pos {
-    self.isSeek = NO;
-    self.srcFilePos = pos;
-    self.srcFormat = (CAStreamBasicDescription*)malloc(sizeof(CAStreamBasicDescription));
-    CAStreamBasicDescription dstFormat;
-    
-    try {
-        if (self.sourceURL == NULL) {
-            self.sourceURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, (CFStringRef)url, kCFURLPOSIXPathStyle, false);
-        }
-        
-        pthread_mutex_lock(&mutex);
-        OSStatus error = AudioFileOpenURL(sourceURL, kAudioFileReadPermission, 0, &sourceFileID);
-        while (error && !self.stopRunloop) {
-            if (self.bytesCanRead > self.contentLength * 0.01) {
-                pthread_mutex_unlock(&mutex);
-                if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:playNext:)]) {
-                    [self.delegate AQDecoder:self playNext:YES];
-                }
-                return;
-            }
-            
-            [self timerStop:YES];
-            pthread_cond_wait(&cond, &mutex);
-            error = AudioFileOpenURL(sourceURL, kAudioFileReadPermission, 0, &sourceFileID);
-        }
-        pthread_mutex_unlock(&mutex);
-        
-        UInt32 size = sizeof(*srcFormat);
-        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataFormat, &size, self.srcFormat), "couldn't get source data format");
-        
-        size = sizeof(self.audioDataOffset);
-        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataOffset, &size, &audioDataOffset), "couldn't get kAudioFilePropertyDataOffset");
-        if (self.bytesOffset == 0) {
-            self.bytesOffset = self.audioDataOffset;
-        }
-        
-        size = sizeof(self.bitRate);
-        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyBitRate, &size, &bitRate), "couldn't get kAudioFilePropertyBitRate");
-        if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:duration:zeroCurrentTime:)]) {
-            self.duration = (self.contentLength - self.bytesOffset) * 8 / self.bitRate;
-            [self.delegate AQDecoder:self duration:self.duration zeroCurrentTime:(pos == 0 ? YES : NO)];
-        }
-        
-        dstFormat.mSampleRate = self.srcFormat->mSampleRate;
-        dstFormat.mFormatID = kAudioFormatLinearPCM;
-        dstFormat.mChannelsPerFrame = self.srcFormat->NumberChannels();
-        dstFormat.mBitsPerChannel = 16;
-        dstFormat.mBytesPerPacket = dstFormat.mBytesPerFrame = 2 * dstFormat.mChannelsPerFrame;
-        dstFormat.mFramesPerPacket = 1;
-        dstFormat.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger;
-        
-        [self createGraph:dstFormat];
-        
-        [self decoderFrame:url];
-    } catch (CAXException e) {
-        char buf[256];
-        NSLog(@"Error: %s (%s)\n", e.mOperation, e.FormatError(buf));
-    }
-}
-
 - (void)decoderFrame:(NSString*)url {
     char *mp3_filename = (char *)[url cStringUsingEncoding:NSUTF8StringEncoding];
     struct bit_stream *bs = create_bit_stream(mp3_filename, BUFFER_SIZE, (__bridge void*)self);
+    seek_bit_stream(bs, self.bytesOffset);
     struct audio_data_buf *buf = create_audio_data_buf(BUFFER_SIZE);
     struct frame *fr_ps = create_frame();
     struct III_side_info *side_info = create_III_side_info();
@@ -204,11 +143,8 @@
     int done = FALSE;
     
     typedef short PCM[2][SSLIMIT][SBLIMIT];
-    PCM *pcm_sample;
+    PCM *pcm_sample = (PCM *)mem_alloc((long) sizeof(PCM), (char *)"PCM Samp");
     
-    pcm_sample = (PCM *)mem_alloc((long) sizeof(PCM), (char *)"PCM Samp");
-    
-    unsigned long sample_frames = 0;
     int frame_start = 0;
     short int outsamp[1600];
     long k = 0;
@@ -235,22 +171,22 @@
         if (!sync) {
             done = TRUE;
             printf("\nFrame cannot be located\n");
-            out_fifo(*pcm_sample, 3, fr_ps->stereo, done, outsamp, &k, &sample_frames, (__bridge void*)self);
+            out_fifo(*pcm_sample, 3, fr_ps->stereo, done, outsamp, &k, (__bridge void*)self);
             break;
         }
         
         decode_info(bs, fr_ps);//解码帧头
         
-        if (fr_ps->header.sampling_frequency == 3) {//丢弃当前帧
+        if (fr_ps->header.sampling_frequency == 3) {//seek时解析出错，丢弃当前帧
             continue;
         }
         
         hdr_to_frps(fr_ps);//将fr_ps.header中的信息解读到fr_ps的相关域中
         
-        if(frameNum == 0) {//输出相关信息
-            writeHdr(fr_ps);
-        }
-        
+//        if(frameNum == 0) {//输出相关信息
+//            writeHdr(fr_ps);
+//        }
+//        
 //        printf("%05lu\n", frameNum++);
         frameNum++;
         
@@ -275,7 +211,7 @@
                 }
             }
         }
-        if (flag) {//丢弃当前帧
+        if (flag) {//seek时解析出错，丢弃当前帧
             continue;
         }
         
@@ -300,7 +236,7 @@
         
         frame_start += main_data_slots(fr_ps);//当前帧的结尾，同时也是下一帧的开始位置(可以直接使用变量nSlots，不用再调用函数main_data_slots计算一次)
         
-        if (bytes_to_discard < 0) {//丢弃当前帧
+        if (bytes_to_discard < 0) {//seek时解析出错，丢弃当前帧
             printf("Not enough main data to decode frame %ld, Frame discarded.\n", frameNum - 1);
             
             continue;
@@ -359,7 +295,7 @@
                 }
             }
             
-            out_fifo(*pcm_sample, 18, fr_ps->stereo, done, outsamp, &k, &sample_frames, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
+            out_fifo(*pcm_sample, 18, fr_ps->stereo, done, outsamp, &k, (__bridge void*)self);//PCM输出(Output PCM sample points for one granule(颗粒))
         }
         
         if(clip > 0) {
@@ -374,14 +310,14 @@
     printf("\nDecoding done.\n");
 }
 
-void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int done, short int *outsamp, long *k, unsigned long *psampFrames, void *myself) {
-    int i, j, l;
+void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int done, short int *outsamp, long *k, void *myself) {
+    static unsigned long sample_frames = 0;
     
     if (!done) {
-        for (i = 0; i < num; i++) {
-            for (j = 0; j < SBLIMIT; j++) {
-                (*psampFrames)++;
-                for (l = 0; l < stereo; l++) {
+        for (int i = 0; i < num; i++) {
+            for (int j = 0; j < SBLIMIT; j++) {
+                sample_frames++;
+                for (int l = 0; l < stereo; l++) {
                     if (!(*k % 1600) && *k) {//k > 0 且 k 整除 1600 时写入文件
                         AQDecoder *decoder = (__bridge AQDecoder*)myself;
                         [decoder timerStop:NO];
@@ -401,7 +337,64 @@ void out_fifo(short pcm_sample[2][SSLIMIT][SBLIMIT], int num, int stereo, int do
 }
 
 - (void)doDecoderFile:(NSString*)url {
-    [self doDecoderFile:url srcFilePos:0];
+    self.isSeek = NO;
+    self.srcFilePos = 0;
+    self.srcFormat = (CAStreamBasicDescription*)malloc(sizeof(CAStreamBasicDescription));
+    CAStreamBasicDescription dstFormat;
+    
+    try {
+        if (self.sourceURL == NULL) {
+            self.sourceURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, (CFStringRef)url, kCFURLPOSIXPathStyle, false);
+        }
+        
+        pthread_mutex_lock(&mutex);
+        OSStatus error = AudioFileOpenURL(sourceURL, kAudioFileReadPermission, 0, &sourceFileID);
+        while (error && !self.stopRunloop) {
+            if (self.bytesCanRead > self.contentLength * 0.01) {
+                pthread_mutex_unlock(&mutex);
+                if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:playNext:)]) {
+                    [self.delegate AQDecoder:self playNext:YES];
+                }
+                return;
+            }
+            
+            [self timerStop:YES];
+            pthread_cond_wait(&cond, &mutex);
+            error = AudioFileOpenURL(sourceURL, kAudioFileReadPermission, 0, &sourceFileID);
+        }
+        pthread_mutex_unlock(&mutex);
+        
+        UInt32 size = sizeof(*srcFormat);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataFormat, &size, self.srcFormat), "couldn't get source data format");
+        
+        size = sizeof(self.audioDataOffset);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyDataOffset, &size, &audioDataOffset), "couldn't get kAudioFilePropertyDataOffset");
+        if (self.bytesOffset == 0) {
+            self.bytesOffset = self.audioDataOffset;
+        }
+        
+        size = sizeof(self.bitRate);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyBitRate, &size, &bitRate), "couldn't get kAudioFilePropertyBitRate");
+        if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:duration:zeroCurrentTime:)]) {
+            self.duration = (self.contentLength - self.bytesOffset) * 8 / self.bitRate;
+            [self.delegate AQDecoder:self duration:self.duration zeroCurrentTime:(self.srcFilePos == 0 ? YES : NO)];
+        }
+        
+        dstFormat.mSampleRate = self.srcFormat->mSampleRate;
+        dstFormat.mFormatID = kAudioFormatLinearPCM;
+        dstFormat.mChannelsPerFrame = self.srcFormat->NumberChannels();
+        dstFormat.mBitsPerChannel = 16;
+        dstFormat.mBytesPerPacket = dstFormat.mBytesPerFrame = 2 * dstFormat.mChannelsPerFrame;
+        dstFormat.mFramesPerPacket = 1;
+        dstFormat.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger;
+        
+        [self createGraph:dstFormat];
+        
+        [self decoderFrame:url];
+    } catch (CAXException e) {
+        char buf[256];
+        NSLog(@"Error: %s (%s)\n", e.mOperation, e.FormatError(buf));
+    }
 }
 
 - (void)wait {
