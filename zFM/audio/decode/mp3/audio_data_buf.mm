@@ -73,7 +73,9 @@ unsigned long hgetbits(struct audio_data_buf*buf, int N) {
             buf->buf_byte_idx++;
             if (buf->buf_byte_idx > buf->offset) {
                 printf("Buffer overflow %ld > %ld!!\n", buf->buf_byte_idx, buf->offset);
-                exit(3);
+                // ??在网络流媒体下，有时seek播放的时候，III_hufman_decode会因为边信息part2_3_length出错而解析到这里（decode.mm 119行），
+                // 所以在此不做处理，自动丢弃不正确的帧??
+//                exit(3);
             }
         }
         k = MIN(j, buf->buf_bit_idx);
