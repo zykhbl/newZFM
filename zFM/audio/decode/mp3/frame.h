@@ -35,6 +35,8 @@ struct frame {
     int         sblimit;        //total number of sub bands
 };
 
+extern double s_freq[4];
+
 extern struct frame *create_frame();
 extern void free_frame(struct frame **fr_ps);
 

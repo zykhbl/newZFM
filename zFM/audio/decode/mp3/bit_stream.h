@@ -35,7 +35,7 @@ extern int	end_bs(struct bit_stream *bs);
 extern unsigned long sstell(struct bit_stream *bs);
 extern unsigned int get1bit(struct bit_stream *bs);
 extern unsigned long getbits(struct bit_stream *bs, int N);
-extern void seek_bit_stream(struct bit_stream *bs, long offset);
+extern void seek_bit_stream(struct bit_stream *bs, off_t offset);
 extern unsigned long pre_get_version(struct bit_stream *bs);
 extern unsigned long pre_get_layer(struct bit_stream *bs);
 

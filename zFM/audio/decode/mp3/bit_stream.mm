@@ -91,7 +91,7 @@ void will_refill_buffer(struct bit_stream *bs) {
         if (bs->eob == 0 || bs->buf_byte_idx == bs->eob) {
             bs->eob = (int)fread(bs->buf, sizeof(unsigned char), bs->buf_size, bs->pt);
             if (bs->eob == 0 && feof(bs->pt)) {
-                if (decoder.bytesCanRead == decoder.contentLength) {
+                if (decoder.bytesCanRead == decoder.contentLength || decoder.stopRunloop) {
                     bs->eobs = TRUE;
                 } else {
                     [decoder wait];
@@ -151,7 +151,7 @@ unsigned long getbits(struct bit_stream *bs, int N) {
     return val;
 }
 
-void seek_bit_stream(struct bit_stream *bs, long offset) {
+void seek_bit_stream(struct bit_stream *bs, off_t offset) {
     fseek(bs->pt, offset, SEEK_SET);
 }
 
