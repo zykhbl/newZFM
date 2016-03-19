@@ -24,7 +24,7 @@ void *mem_alloc(unsigned long block, char *item) {
 }
 
 FILE *openTableFile(char *name) {
-    char fulname[80];
+    char fulname[1024];
     FILE *f;
     
     fulname[0] = '\0';

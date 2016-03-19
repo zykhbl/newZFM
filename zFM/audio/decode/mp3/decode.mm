@@ -6,6 +6,7 @@
 //  Copyright © 2016年 zykhbl. All rights reserved.
 //
 
+#import <Foundation/Foundation.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +17,6 @@
 #include "decode.h"
 
 int huffman_initialized = FALSE;
-char *huffdec = (char *)"/Users/weidong_wu/mp3/resource/huffdec.txt";
 
 void initialize_huffman() {
     FILE *fi;
@@ -24,6 +24,9 @@ void initialize_huffman() {
     if (huffman_initialized) {
         return;
     }
+    
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"huffdec" ofType:@"txt"];
+    char *huffdec = (char *)[path UTF8String];
     if (!(fi = openTableFile(huffdec))) {
         printf("Please check huffman table 'huffdec.txt'\n");
         exit(1);
@@ -661,8 +664,6 @@ void create_syn_filter(double filter[64][SBLIMIT]) {
     }
 }
 
-char *dewindow = (char *)"/Users/weidong_wu/mp3/resource/dewindow.txt";
-
 //Window the restored sample
 //read in synthesis window
 void read_syn_window(double window[HAN_SIZE]) {
@@ -671,6 +672,8 @@ void read_syn_window(double window[HAN_SIZE]) {
     double f[4];
     char t[150];
     
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"dewindow" ofType:@"txt"];
+    char *dewindow = (char *)[path UTF8String];
     if (!(fp = openTableFile(dewindow))) {
         printf("Please check synthesis window table 'dewindow.txt'\n");
         exit(1);
