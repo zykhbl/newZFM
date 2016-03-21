@@ -30,11 +30,13 @@
 }
 
 - (void)applicationDidEnterBackground:(UIApplication*)application {
-    bgTask = [application beginBackgroundTaskWithExpirationHandler:NULL];
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-
-    });
+    __weak __typeof__(self) weakSelf = self;
+    self.bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        if (weakSelf.bgTask != UIBackgroundTaskInvalid) {
+            [[UIApplication sharedApplication] endBackgroundTask:weakSelf.bgTask];
+            weakSelf.bgTask = UIBackgroundTaskInvalid;
+        }
+    }];
 }
 
 @end
