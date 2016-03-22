@@ -13,7 +13,6 @@
 
 @synthesize window;
 @synthesize mainVC;
-@synthesize bgTask;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     [AQPlayer playForeground];
@@ -27,16 +26,6 @@
     self.window.rootViewController = self.mainVC;
     
     return YES;
-}
-
-- (void)applicationDidEnterBackground:(UIApplication*)application {
-    __weak __typeof__(self) weakSelf = self;
-    self.bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
-        if (weakSelf.bgTask != UIBackgroundTaskInvalid) {
-            [[UIApplication sharedApplication] endBackgroundTask:weakSelf.bgTask];
-            weakSelf.bgTask = UIBackgroundTaskInvalid;
-        }
-    }];
 }
 
 @end

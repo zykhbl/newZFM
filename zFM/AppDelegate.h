@@ -13,6 +13,5 @@
 
 @property (strong, nonatomic) UIWindow *window;
 @property (strong, nonatomic) AudioPlayViewController *mainVC;
-@property (nonatomic) UIBackgroundTaskIdentifier bgTask;
 
 @end
