@@ -34,6 +34,8 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
 @property (nonatomic, assign) BOOL isSeek;
 @property (nonatomic, assign) SInt64 srcFilePos;
 @property (nonatomic, assign) UInt64 audioDataOffset;
+@property (nonatomic, assign) UInt64 audioDataByteCount;
+@property (nonatomic, assign) UInt64 audioDataPacketCount;
 @property (nonatomic, assign) UInt32 bitRate;
 @property (nonatomic, assign) NSTimeInterval duration;
 
@@ -64,6 +66,8 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
 @synthesize isSeek;
 @synthesize srcFilePos;
 @synthesize audioDataOffset;
+@synthesize audioDataByteCount;
+@synthesize audioDataPacketCount;
 @synthesize bitRate;
 @synthesize duration;
 
@@ -377,7 +381,7 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
         pthread_mutex_lock(&mutex);
         OSStatus error = AudioFileOpenURL(sourceURL, kAudioFileReadPermission, 0, &sourceFileID);
         while (error && !self.stopRunloop) {
-            if (self.bytesCanRead > self.contentLength * 0.01) {
+            if (self.bytesCanRead > self.contentLength * 0.2) {
                 pthread_mutex_unlock(&mutex);
                 if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:playNext:)]) {
                     [self.delegate AQDecoder:self playNext:YES];
@@ -400,10 +404,16 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
             self.bytesOffset = self.audioDataOffset;
         }
         
+        size = sizeof(self.audioDataByteCount);
+        XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyAudioDataByteCount, &size, &audioDataByteCount), "couldn't get kAudioFilePropertyAudioDataByteCount");
+        if (self.audioDataByteCount < contentLength - self.audioDataOffset) {
+            self.audioDataByteCount = contentLength - self.audioDataOffset;
+        }
+        
         size = sizeof(self.bitRate);
         XThrowIfError(AudioFileGetProperty(self.sourceFileID, kAudioFilePropertyBitRate, &size, &bitRate), "couldn't get kAudioFilePropertyBitRate");
         if (self.delegate && [self.delegate respondsToSelector:@selector(AQDecoder:duration:zeroCurrentTime:)]) {
-            self.duration = (self.contentLength - self.bytesOffset) * 8 / self.bitRate;
+            self.duration = self.audioDataByteCount * 8 / self.bitRate;
             [self.delegate AQDecoder:self duration:self.duration zeroCurrentTime:(self.srcFilePos == 0 ? YES : NO)];
         }
         
@@ -416,6 +426,9 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
         dstFormat.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger;
         
         [self createGraph:dstFormat];
+        
+        double packetDuration = self.srcFormat->mFramesPerPacket / self.srcFormat->mSampleRate;
+        self.audioDataPacketCount = self.duration / packetDuration;
         
         [self decoderFrame:url];
     } catch (CAXException e) {
@@ -454,7 +467,7 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
 - (void)seek:(NSTimeInterval)seekToTime {
     self.isSeek = YES;
     
-    self.bytesOffset = self.audioDataOffset + (self.contentLength - self.audioDataOffset) * (seekToTime / self.duration);
+    self.bytesOffset = self.audioDataOffset + self.audioDataByteCount * (seekToTime / self.duration);
     double packetDuration = self.srcFormat->mFramesPerPacket / self.srcFormat->mSampleRate;
     self.srcFilePos = (UInt32)(seekToTime / packetDuration);
     

@@ -5,46 +5,36 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>319EF312-E1D5-4F99-B58B-12EA5FAD6640</string>
+	<string>1F43618C-C31B-47A1-A89E-49964ED6EA3D</string>
 	<key>IDESourceControlProjectName</key>
 	<string>zFM</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>C9C301C9-584B-4A59-A3C2-B8C4BE7FCF66</key>
-		<string>https://github.com/zykhbl/zFM.git</string>
+		<key>DF230165-E5C6-4FA3-94FF-9C29A9C0C203</key>
+		<string>https://github.com/zykhbl/newZFM.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
 	<string>zFM.xcodeproj/project.xcworkspace</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>2801AE0D-C5CC-4927-8BB2-AA7AF2E8C30E</key>
-		<string>../../zFM</string>
-		<key>C9C301C9-584B-4A59-A3C2-B8C4BE7FCF66</key>
+		<key>DF230165-E5C6-4FA3-94FF-9C29A9C0C203</key>
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>https://github.com/zykhbl/zFM.git</string>
+	<string>https://github.com/zykhbl/newZFM.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>110</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>C9C301C9-584B-4A59-A3C2-B8C4BE7FCF66</string>
+	<string>DF230165-E5C6-4FA3-94FF-9C29A9C0C203</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>C9C301C9-584B-4A59-A3C2-B8C4BE7FCF66</string>
+			<string>DF230165-E5C6-4FA3-94FF-9C29A9C0C203</string>
 			<key>IDESourceControlWCCName</key>
-			<string>zFM</string>
-		</dict>
-		<dict>
-			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
-			<string>public.vcs.git</string>
-			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>2801AE0D-C5CC-4927-8BB2-AA7AF2E8C30E</string>
-			<key>IDESourceControlWCCName</key>
-			<string>zFM</string>
+			<string>newZFM</string>
 		</dict>
 	</array>
 </dict>
