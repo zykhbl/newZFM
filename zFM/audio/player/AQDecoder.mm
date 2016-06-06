@@ -36,6 +36,7 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
 @property (nonatomic, assign) UInt64 audioDataOffset;
 @property (nonatomic, assign) UInt64 audioDataByteCount;
 @property (nonatomic, assign) UInt64 audioDataPacketCount;
+@property (nonatomic, assign) double packetDuration;
 @property (nonatomic, assign) UInt32 bitRate;
 @property (nonatomic, assign) NSTimeInterval duration;
 
@@ -68,6 +69,7 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
 @synthesize audioDataOffset;
 @synthesize audioDataByteCount;
 @synthesize audioDataPacketCount;
+@synthesize packetDuration;
 @synthesize bitRate;
 @synthesize duration;
 
@@ -427,8 +429,8 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
         
         [self createGraph:dstFormat];
         
-        double packetDuration = self.srcFormat->mFramesPerPacket / self.srcFormat->mSampleRate;
-        self.audioDataPacketCount = self.duration / packetDuration;
+        self.packetDuration = self.srcFormat->mFramesPerPacket / self.srcFormat->mSampleRate;
+        self.audioDataPacketCount = self.duration / self.packetDuration;
         
         [self decoderFrame:url];
     } catch (CAXException e) {
@@ -468,8 +470,7 @@ typedef short PCM[2][SSLIMIT][SBLIMIT];
     self.isSeek = YES;
     
     self.bytesOffset = self.audioDataOffset + self.audioDataByteCount * (seekToTime / self.duration);
-    double packetDuration = self.srcFormat->mFramesPerPacket / self.srcFormat->mSampleRate;
-    self.srcFilePos = (UInt32)(seekToTime / packetDuration);
+    self.srcFilePos = (UInt32)(seekToTime / self.packetDuration);
     
     [self signal];
 }

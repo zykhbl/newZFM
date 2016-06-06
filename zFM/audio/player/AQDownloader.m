@@ -148,6 +148,8 @@
     if (self.converted) {
         [self signal:YES];
         [self closeFile];
+    } else {
+        [self playNext];
     }
 }
 

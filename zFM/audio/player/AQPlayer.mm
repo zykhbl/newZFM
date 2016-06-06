@@ -48,7 +48,7 @@
         self.downloader = [[AQDownloader alloc] init];
         self.downloader.delegate = self;
         self.downloader.url = url;
-        [self.downloader performSelector:@selector(start) withObject:nil afterDelay:1.0];
+        [self.downloader start];
     }
 }
 
